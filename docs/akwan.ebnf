@@ -1,0 +1,15 @@
+
+chunk         ::= stmt* EOF
+
+stmt          ::= "let" NAME "=" expr ";"
+                | "return" expr? ";"
+
+expr          ::= mul_expr ( ( "+" | "-" ) mul_expr )*
+
+mul_expr      ::= unary_expr ( ( "*" | "/" | "%" ) unary_expr )*
+
+unary_expr    ::= "-" unary_expr | prim_expr
+
+prim_expr     ::= "nil" | "false" | "true" | INT | NUMBER
+                | NAME
+                | "(" expr ")"
