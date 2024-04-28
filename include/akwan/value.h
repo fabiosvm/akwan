@@ -12,6 +12,7 @@
 #define AKW_VALUE_H
 
 #include <stdbool.h>
+#include <stdint.h>
 
 #define AKW_FALG_FALSY (0x01)
 
@@ -24,10 +25,12 @@
 #define akw_is_nil(v)    (akw_type(v) == AKW_TYPE_NIL)
 #define akw_is_bool(v)   (akw_type(v) == AKW_TYPE_BOOL)
 #define akw_is_number(v) (akw_type(v) == AKW_TYPE_NUMBER)
+#define akw_is_int(v)    (akw_is_number(v) && (akw_as_number(v) == akw_as_int(v)))
 #define akw_is_falsy(v)  ((v).flags & AKW_FALG_FALSY)
 
 #define akw_as_bool(v)   ((v).asBool)
 #define akw_as_number(v) ((v).asNumber)
+#define akw_as_int(v)    ((int64_t) akw_as_number(v))
 
 typedef enum
 {
@@ -46,5 +49,7 @@ typedef struct
     double asNumber;
   };
 } AkwValue;
+
+const char *akw_type_name(AkwType type);
 
 #endif // AKW_VALUE_H
