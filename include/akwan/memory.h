@@ -1,5 +1,5 @@
 //
-// akwan.h
+// memory.h
 // 
 // Copyright 2024 Fábio de Souza Villaça Medeiros
 // 
@@ -8,10 +8,13 @@
 // located in the root directory of this project.
 //
 
-#ifndef AKWAN_H
-#define AKWAN_H
+#ifndef AKW_MEMORY_H
+#define AKW_MEMORY_H
 
-#include "akwan/memory.h"
-#include "akwan/value.h"
+#include <stddef.h>
 
-#endif // AKWAN_H
+void *akw_memory_alloc(size_t size);
+void *akw_memory_realloc(void *ptr, size_t newSize);
+void akw_memory_dealloc(void *ptr);
+
+#endif // AKW_MEMORY_H

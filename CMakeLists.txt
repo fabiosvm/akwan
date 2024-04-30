@@ -16,6 +16,7 @@ endif()
 
 add_executable(${PROJECT_NAME}
   "src/main.c"
+  "src/memory.c"
   "src/value.c"
 )
 
