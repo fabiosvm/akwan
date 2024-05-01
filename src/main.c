@@ -8,8 +8,8 @@
 // located in the root directory of this project.
 //
 
-#include <stdlib.h>
 #include <akwan.h>
+#include <stdlib.h>
 
 int main(void)
 {
