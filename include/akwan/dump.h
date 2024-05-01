@@ -1,5 +1,5 @@
 //
-// akwan.h
+// dump.h
 // 
 // Copyright 2024 Fábio de Souza Villaça Medeiros
 // 
@@ -8,13 +8,11 @@
 // located in the root directory of this project.
 //
 
-#ifndef AKWAN_H
-#define AKWAN_H
+#ifndef AKW_DUMP_H
+#define AKW_DUMP_H
 
-#include "akwan/chunk.h"
-#include "akwan/common.h"
-#include "akwan/dump.h"
-#include "akwan/memory.h"
-#include "akwan/value.h"
+#include "chunk.h"
 
-#endif // AKWAN_H
+void akw_dump_chunk(const AkwChunk *chunk);
+
+#endif // AKW_DUMP_H

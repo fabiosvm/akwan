@@ -15,6 +15,8 @@ else()
 endif()
 
 add_executable(${PROJECT_NAME}
+  "src/chunk.c"
+  "src/dump.c"
   "src/main.c"
   "src/memory.c"
   "src/value.c"
