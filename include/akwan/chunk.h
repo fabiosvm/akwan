@@ -11,12 +11,11 @@
 #ifndef AKW_CHUNK_H
 #define AKW_CHUNK_H
 
-#include <stdint.h>
 #include "value.h"
 #include "vector.h"
 
 #define akw_instr_fmt0(op)          ((uint32_t) (op))
-#define akw_instr_fmt1(op, a, bc)   ((uint32_t) (((bc) << 16) | ((a) << 8) | (op)))
+#define akw_instr_fmt1(op, a)       ((uint32_t) (((a) << 8) | (op)))
 #define akw_instr_fmt2(op, a, b)    ((uint32_t) (((b) << 16) | ((a) << 8) | (op)))
 #define akw_instr_fmt3(op, a, b, c) ((uint32_t) ((c) << 24) | ((b) << 16) | ((a) << 8) | (op))
 
@@ -37,7 +36,6 @@
 #define akw_instr_a(i)  ((uint8_t) (((i) >> 8) & 0xff))
 #define akw_instr_b(i)  ((uint8_t) (((i) >> 16) & 0xff))
 #define akw_instr_c(i)  ((uint8_t) (((i) >> 24) & 0xff))
-#define akw_instr_bc(i) ((uint16_t) ((i) >> 16))
 
 typedef enum
 {

@@ -20,6 +20,11 @@ add_executable(${PROJECT_NAME}
   "src/main.c"
   "src/memory.c"
   "src/value.c"
+  "src/vm.c"
 )
 
 target_include_directories(${PROJECT_NAME} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/include)
+
+if(NOT MSVC)
+  target_link_libraries(${PROJECT_NAME} m)
+endif()

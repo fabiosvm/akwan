@@ -11,26 +11,25 @@
 #include "akwan/dump.h"
 #include <stdio.h>
 
-static inline void print_fma0(uint32_t instr);
-static inline void print_fma1(uint32_t instr);
-static inline void print_fma2(uint32_t instr);
-static inline void print_fma3(uint32_t instr);
+static inline void print_fmt0(uint32_t instr);
+static inline void print_fmt1(uint32_t instr);
+static inline void print_fmt2(uint32_t instr);
+static inline void print_fmt3(uint32_t instr);
 
-static inline void print_fma0(uint32_t instr)
+static inline void print_fmt0(uint32_t instr)
 {
   AkwOpcode op = (AkwOpcode) akw_instr_op(instr);
   printf("%-6s\n", akw_opcode_name(op));
 }
 
-static inline void print_fma1(uint32_t instr)
+static inline void print_fmt1(uint32_t instr)
 {
   AkwOpcode op = (AkwOpcode) akw_instr_op(instr);
   uint8_t a = akw_instr_a(instr);
-  uint16_t bc = akw_instr_bc(instr);
-  printf("%-6s %-5d %-5d\n", akw_opcode_name(op), a, bc);
+  printf("%-6s %-5d\n", akw_opcode_name(op), a);
 }
 
-static inline void print_fma2(uint32_t instr)
+static inline void print_fmt2(uint32_t instr)
 {
   AkwOpcode op = (AkwOpcode) akw_instr_op(instr);
   uint8_t a = akw_instr_a(instr);
@@ -38,7 +37,7 @@ static inline void print_fma2(uint32_t instr)
   printf("%-6s %-5d %-5d\n", akw_opcode_name(op), a, b);
 }
 
-static inline void print_fma3(uint32_t instr)
+static inline void print_fmt3(uint32_t instr)
 {
   AkwOpcode op = (AkwOpcode) akw_instr_op(instr);
   uint8_t a = akw_instr_a(instr);
@@ -64,24 +63,24 @@ void akw_dump_chunk(const AkwChunk *chunk)
     switch (op)
     {
     case AKW_OP_RETURN:
-      print_fma0(instr);
+      print_fmt0(instr);
       break;
     case AKW_OP_NIL:
     case AKW_OP_FALSE:
     case AKW_OP_TRUE:
-      print_fma1(instr);
+      print_fmt1(instr);
       break;
     case AKW_OP_CONST:
     case AKW_OP_MOVE:
     case AKW_OP_NEG:
-      print_fma2(instr);
+      print_fmt2(instr);
       break;
     case AKW_OP_ADD:
     case AKW_OP_SUB:
     case AKW_OP_MUL:
     case AKW_OP_DIV:
     case AKW_OP_MOD:
-      print_fma3(instr);
+      print_fmt3(instr);
       break;
     }
   }

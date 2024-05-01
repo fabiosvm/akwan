@@ -11,8 +11,9 @@
 #ifndef AKW_COMMON_H
 #define AKW_COMMON_H
 
-#define AKW_OK                        (0)
-#define AKW_ERR_MAX_CAPACITY_EXCEEDED (1)
+#define AKW_OK          (0)
+#define AKW_TYPE_ERROR  (1)
+#define AKW_RANGE_ERROR (2)
 
 #define AKW_MIN_CAPACITY (1 << 3)
 #define AKW_MAX_CAPACITY (1 << 30)

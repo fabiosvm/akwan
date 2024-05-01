@@ -15,6 +15,9 @@
 #include "akwan/common.h"
 #include "akwan/dump.h"
 #include "akwan/memory.h"
+#include "akwan/stack.h"
 #include "akwan/value.h"
+#include "akwan/vector.h"
+#include "akwan/vm.h"
 
 #endif // AKWAN_H

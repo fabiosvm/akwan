@@ -45,14 +45,14 @@
     int capacity = (v)->capacity; \
     if ((v)->count == capacity) { \
       if (capacity == AKW_MAX_CAPACITY) { \
-        *(rc) = AKW_ERR_MAX_CAPACITY_EXCEEDED; \
+        *(rc) = AKW_RANGE_ERROR; \
         break; \
       } \
       int newCapacity = capacity << 1; \
       size_t newSize = sizeof(*(v)->elements) * newCapacity; \
-      void *elements = akw_memory_realloc((v)->elements, newSize); \
+      void *newElements = akw_memory_realloc((v)->elements, newSize); \
       (v)->capacity = newCapacity; \
-      (v)->elements = elements; \
+      (v)->elements = newElements; \
     } \
     (v)->elements[(v)->count] = (e); \
     ++(v)->count; \
