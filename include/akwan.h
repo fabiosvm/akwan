@@ -14,6 +14,7 @@
 #include "akwan/chunk.h"
 #include "akwan/common.h"
 #include "akwan/dump.h"
+#include "akwan/error.h"
 #include "akwan/memory.h"
 #include "akwan/stack.h"
 #include "akwan/value.h"

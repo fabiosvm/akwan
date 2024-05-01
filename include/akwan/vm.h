@@ -12,6 +12,7 @@
 #define AKW_VM_H
 
 #include "chunk.h"
+#include "error.h"
 #include "stack.h"
 
 #define AKW_VM_DEFAULT_STACK_SIZE (1024)
@@ -21,6 +22,7 @@
 typedef struct
 {
   int                rc;
+  AkwError           err;
   AkwStack(AkwValue) stack;
 } AkwVM;
 

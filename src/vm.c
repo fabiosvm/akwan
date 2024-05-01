@@ -94,6 +94,8 @@ static void do_add(AkwVM *vm, AkwChunk *chunk, uint32_t *ip, AkwValue *slots)
   if (!akw_is_number(val1) || !akw_is_number(val2))
   {
     vm->rc = AKW_TYPE_ERROR;
+    akw_error_set(vm->err, "cannot add %s and %s", akw_type_name(akw_type(val1)),
+      akw_type_name(akw_type(val2)));
     return;
   }
   double num = akw_as_number(val1) + akw_as_number(val2);
@@ -112,6 +114,8 @@ static void do_sub(AkwVM *vm, AkwChunk *chunk, uint32_t *ip, AkwValue *slots)
   if (!akw_is_number(val1) || !akw_is_number(val2))
   {
     vm->rc = AKW_TYPE_ERROR;
+    akw_error_set(vm->err, "cannot subtract %s from %s", akw_type_name(akw_type(val2)),
+      akw_type_name(akw_type(val1)));
     return;
   }
   double num = akw_as_number(val1) - akw_as_number(val2);
@@ -130,6 +134,8 @@ static void do_mul(AkwVM *vm, AkwChunk *chunk, uint32_t *ip, AkwValue *slots)
   if (!akw_is_number(val1) || !akw_is_number(val2))
   {
     vm->rc = AKW_TYPE_ERROR;
+    akw_error_set(vm->err, "cannot multiply %s by %s", akw_type_name(akw_type(val1)),
+      akw_type_name(akw_type(val2)));
     return;
   }
   double num = akw_as_number(val1) * akw_as_number(val2);
@@ -148,6 +154,8 @@ static void do_div(AkwVM *vm, AkwChunk *chunk, uint32_t *ip, AkwValue *slots)
   if (!akw_is_number(val1) || !akw_is_number(val2))
   {
     vm->rc = AKW_TYPE_ERROR;
+    akw_error_set(vm->err, "cannot divide %s by %s", akw_type_name(akw_type(val1)),
+      akw_type_name(akw_type(val2)));
     return;
   }
   double num = akw_as_number(val1) / akw_as_number(val2);
@@ -166,6 +174,8 @@ static void do_mod(AkwVM *vm, AkwChunk *chunk, uint32_t *ip, AkwValue *slots)
   if (!akw_is_number(val1) || !akw_is_number(val2))
   {
     vm->rc = AKW_TYPE_ERROR;
+    akw_error_set(vm->err, "cannot calculate the modulus of %s by %s", akw_type_name(akw_type(val1)),
+      akw_type_name(akw_type(val2)));
     return;
   }
   double num = fmod(akw_as_number(val1), akw_as_number(val2));
@@ -182,6 +192,7 @@ static void do_neg(AkwVM *vm, AkwChunk *chunk, uint32_t *ip, AkwValue *slots)
   if (!akw_is_number(val))
   {
     vm->rc = AKW_TYPE_ERROR;
+    akw_error_set(vm->err, "cannot negate %s", akw_type_name(akw_type(val)));
     return;
   }
   double num = - akw_as_number(val);
