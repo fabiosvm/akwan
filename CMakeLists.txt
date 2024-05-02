@@ -16,6 +16,7 @@ endif()
 
 add_executable(${PROJECT_NAME}
   "src/chunk.c"
+  "src/compiler.c"
   "src/dump.c"
   "src/error.c"
   "src/lexer.c"

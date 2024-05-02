@@ -199,18 +199,17 @@ const char *akw_token_kind_name(AkwTokenKind kind)
   return name;
 }
 
-void akw_lexer_init(AkwLexer *lex, char *file, char *source)
+void akw_lexer_init(AkwLexer *lex, char *file, char *source, int *rc, AkwError err)
 {
   lex->file = file;
   lex->source = source;
   lex->curr = source;
   lex->ln = 1;
   lex->col = 1;
-  lex->rc = AKW_OK;
-  akw_lexer_next(lex);
+  akw_lexer_next(lex, rc, err);
 }
 
-void akw_lexer_next(AkwLexer *lex)
+void akw_lexer_next(AkwLexer *lex, int *rc, AkwError err)
 {
   skip_space(lex);
   if (match_char(lex, 0, AKW_TOKEN_KIND_EOF)) return;
@@ -232,6 +231,6 @@ void akw_lexer_next(AkwLexer *lex)
   if (match_name(lex)) return;
   char c = current_char(lex);
   c = isprint(c) ? c : '?';
-  lex->rc = AKW_ERROR;
-  akw_error_set(lex->err, "unexpected character '%c'", c);
+  *rc = AKW_LEXICAL_ERROR;
+  akw_error_set(err, "unexpected character '%c'", c);
 }

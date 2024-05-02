@@ -38,13 +38,11 @@ typedef struct
   char     *curr;
   int      ln;
   int      col;
-  int      rc;
-  AkwError err;
   AkwToken token;
 } AkwLexer;
 
 const char *akw_token_kind_name(AkwTokenKind kind);
-void akw_lexer_init(AkwLexer *lex, char *file, char *source);
-void akw_lexer_next(AkwLexer *lex);
+void akw_lexer_init(AkwLexer *lex, char *file, char *source, int *rc, AkwError err);
+void akw_lexer_next(AkwLexer *lex, int *rc, AkwError err);
 
 #endif // AKW_LEXER_H

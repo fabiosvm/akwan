@@ -19,14 +19,14 @@ static inline void print_fmt3(uint32_t instr);
 static inline void print_fmt0(uint32_t instr)
 {
   AkwOpcode op = (AkwOpcode) akw_instr_op(instr);
-  printf("%-6s\n", akw_opcode_name(op));
+  printf("%-8s\n", akw_opcode_name(op));
 }
 
 static inline void print_fmt1(uint32_t instr)
 {
   AkwOpcode op = (AkwOpcode) akw_instr_op(instr);
   uint8_t a = akw_instr_a(instr);
-  printf("%-6s %-5d\n", akw_opcode_name(op), a);
+  printf("%-8s %-5d\n", akw_opcode_name(op), a);
 }
 
 static inline void print_fmt2(uint32_t instr)
@@ -34,7 +34,7 @@ static inline void print_fmt2(uint32_t instr)
   AkwOpcode op = (AkwOpcode) akw_instr_op(instr);
   uint8_t a = akw_instr_a(instr);
   uint8_t b = akw_instr_b(instr);
-  printf("%-6s %-5d %-5d\n", akw_opcode_name(op), a, b);
+  printf("%-8s %-5d %-5d\n", akw_opcode_name(op), a, b);
 }
 
 static inline void print_fmt3(uint32_t instr)
@@ -43,7 +43,7 @@ static inline void print_fmt3(uint32_t instr)
   uint8_t a = akw_instr_a(instr);
   uint8_t b = akw_instr_b(instr);
   uint8_t c = akw_instr_c(instr);
-  printf("%-6s %-5d %-5d %-5d\n", akw_opcode_name(op), a, b, c);
+  printf("%-8s %-5d %-5d %-5d\n", akw_opcode_name(op), a, b, c);
 }
 
 void akw_dump_chunk(const AkwChunk *chunk)

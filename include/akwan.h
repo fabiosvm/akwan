@@ -13,6 +13,7 @@
 
 #include "akwan/chunk.h"
 #include "akwan/common.h"
+#include "akwan/compiler.h"
 #include "akwan/dump.h"
 #include "akwan/error.h"
 #include "akwan/lexer.h"
