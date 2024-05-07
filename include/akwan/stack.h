@@ -11,7 +11,6 @@
 #ifndef AKW_STACK_H
 #define AKW_STACK_H
 
-#include "common.h"
 #include "memory.h"
 
 #define AkwStack(T) \
@@ -41,14 +40,15 @@
 
 #define akw_stack_is_full(stk) ((stk)->top == (stk)->end)
 
-#define akw_stack_top(stk) ((stk)->top[0])
+#define akw_stack_get(stk, i) ((stk)->top[-(i)])
 
-#define akw_stack_push(stk, e, rc) \
+#define akw_stack_set(stk, i, e) \
   do { \
-    if (akw_stack_is_full(stk)) { \
-      *(rc) = AKW_RANGE_ERROR; \
-      break; \
-    } \
+    (stk)->top[-(i)] = (e); \
+  } while (0)
+
+#define akw_stack_push(stk, e) \
+  do { \
     ++(stk)->top; \
     (stk)->top[0] = (e); \
   } while (0)

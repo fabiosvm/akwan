@@ -12,7 +12,6 @@
 #define AKW_VALUE_H
 
 #include <stdbool.h>
-#include <stdint.h>
 
 #define AKW_FALG_FALSY (0x01)
 
@@ -51,5 +50,6 @@ typedef struct
 } AkwValue;
 
 const char *akw_type_name(AkwType type);
+void akw_value_print(AkwValue val);
 
 #endif // AKW_VALUE_H

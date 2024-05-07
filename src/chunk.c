@@ -26,8 +26,11 @@ const char *akw_opcode_name(AkwOpcode op)
   case AKW_OP_CONST:
     name = "Const";
     break;
-  case AKW_OP_MOVE:
-    name = "Move";
+  case AKW_OP_LOAD:
+    name = "Load";
+    break;
+  case AKW_OP_STORE:
+    name = "Store";
     break;
   case AKW_OP_ADD:
     name = "Add";
@@ -56,20 +59,24 @@ const char *akw_opcode_name(AkwOpcode op)
 
 void akw_chunk_init(AkwChunk *chunk)
 {
-  akw_vector_init(&chunk->code);
+  akw_buffer_init(&chunk->code);
   akw_vector_init(&chunk->consts);
-  chunk->maxSlots = 0;
 }
 
 void akw_chunk_deinit(AkwChunk *chunk)
 {
-  akw_vector_deinit(&chunk->code);
+  akw_buffer_deinit(&chunk->code);
   akw_vector_deinit(&chunk->consts);
 }
 
-void akw_chunk_emit(AkwChunk *chunk, uint32_t instr, int *rc)
+void akw_chunk_emit_opcode(AkwChunk *chunk, AkwOpcode op, int *rc)
 {
-  akw_vector_append(&chunk->code, instr, rc);
+  akw_buffer_write(&chunk->code, &op, sizeof(uint8_t), rc);
+}
+
+void akw_chunk_emit_byte(AkwChunk *chunk, uint8_t byte, int *rc)
+{
+  akw_buffer_write(&chunk->code, &byte, sizeof(byte), rc);
 }
 
 int akw_chunk_append_constant(AkwChunk *chunk, AkwValue val, int *rc)

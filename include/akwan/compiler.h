@@ -19,7 +19,7 @@
 typedef struct
 {
   AkwToken name;
-  int      index;
+  uint8_t  index;
 } AkwSymbol;
 
 typedef struct
@@ -31,7 +31,7 @@ typedef struct
   AkwChunk             chunk;
 } AkwCompiler;
 
-void akw_compiler_init(AkwCompiler *comp, char *file, char *source);
+void akw_compiler_init(AkwCompiler *comp, char *source);
 void akw_compiler_deinit(AkwCompiler *comp);
 void akw_compiler_compile(AkwCompiler *comp);
 
