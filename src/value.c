@@ -30,7 +30,7 @@ const char *akw_type_name(AkwType type)
 
 void akw_value_print(AkwValue val)
 {
-  switch (val.type)
+  switch (akw_type(val))
   {
   case AKW_TYPE_NIL:
     printf("nil");

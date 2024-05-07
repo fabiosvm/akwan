@@ -9,10 +9,23 @@
 //
 
 #include <akwan.h>
+#include <assert.h>
 #include <stdio.h>
 #include <stdlib.h>
 
+static inline void read_from_stdin(AkwBuffer *buf, int *rc);
 static inline void print_error(char *err);
+
+static inline void read_from_stdin(AkwBuffer *buf, int *rc)
+{
+  int c;
+  while ((c = getchar()) != EOF)
+  {
+    akw_buffer_write(buf, &c, 1, rc);
+    if (!akw_is_ok(*rc)) return;
+  }
+  akw_buffer_write(buf, "\0", 1, rc);
+}
 
 static inline void print_error(char *err)
 {
@@ -21,21 +34,33 @@ static inline void print_error(char *err)
 
 int main(void)
 {
-  char *source = "let x = 10;"
-                 "let y = 20;"
-                 "return x + y;";
+  // Read source code
+  AkwBuffer buf;
+  akw_buffer_init(&buf);
+  int rc = AKW_OK;
+  read_from_stdin(&buf, &rc);
+  if (!akw_is_ok(rc))
+  {
+    assert(rc == AKW_RANGE_ERROR);
+    print_error("source code too large");
+    akw_buffer_deinit(&buf);
+    return EXIT_FAILURE;
+  }
+
   // Compile
   AkwCompiler comp;
-  akw_compiler_init(&comp, source);
+  akw_compiler_init(&comp, (char *) buf.bytes);
   if (!akw_compiler_is_ok(&comp))
   {
     print_error(comp.err);
+    akw_buffer_deinit(&buf);
     return EXIT_FAILURE;
   }
   akw_compiler_compile(&comp);
   if (!akw_compiler_is_ok(&comp))
   {
     print_error(comp.err);
+    akw_buffer_deinit(&buf);
     akw_compiler_deinit(&comp);
     return EXIT_FAILURE;
   }
@@ -50,6 +75,7 @@ int main(void)
   if (!akw_vm_is_ok(&vm))
   {
     print_error(vm.err);
+    akw_buffer_deinit(&buf);
     akw_compiler_deinit(&comp);
     akw_vm_deinit(&vm);
     return EXIT_FAILURE;
@@ -62,6 +88,7 @@ int main(void)
   printf("\n");
 
   // Cleanup
+  akw_buffer_deinit(&buf);
   akw_compiler_deinit(&comp);
   akw_vm_deinit(&vm);
   return EXIT_SUCCESS;

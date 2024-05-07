@@ -96,7 +96,7 @@ static inline void define_symbol(AkwCompiler *comp, AkwToken *name)
   };
   int rc = AKW_OK;
   akw_vector_append(&comp->symbols, symb, &rc);
-  assert(rc == AKW_OK);
+  assert(akw_is_ok(rc));
 }
 
 static inline uint8_t find_symbol(AkwCompiler *comp, AkwToken *name)

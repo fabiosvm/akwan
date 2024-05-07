@@ -15,7 +15,7 @@
 
 #define akw_buffer_is_empty(b) (!(b)->count)
 
-#define akw_buffer_inplace_clear(b) \
+#define akw_buffer_clear(b) \
   do { \
     (b)->count = 0; \
   } while (0)

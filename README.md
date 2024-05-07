@@ -22,7 +22,15 @@ This project uses [CMake](https://cmake.org) to build, and to facilitate this, a
 To run the project:
 
 ```
-build/akwan
+echo "return 1 + 2;" | build/akwan
+```
+
+## Testing
+
+To run the tests:
+
+```
+./test.sh
 ```
 
 ## Cleaning
