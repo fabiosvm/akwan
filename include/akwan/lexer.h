@@ -33,7 +33,6 @@ typedef struct
 
 typedef struct
 {
-  char     *file;
   char     *source;
   char     *curr;
   int      ln;
@@ -42,7 +41,7 @@ typedef struct
 } AkwLexer;
 
 const char *akw_token_kind_name(AkwTokenKind kind);
-void akw_lexer_init(AkwLexer *lex, char *file, char *source, int *rc, AkwError err);
+void akw_lexer_init(AkwLexer *lex, char *source, int *rc, AkwError err);
 void akw_lexer_next(AkwLexer *lex, int *rc, AkwError err);
 
 #endif // AKW_LEXER_H

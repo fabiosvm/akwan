@@ -199,9 +199,8 @@ const char *akw_token_kind_name(AkwTokenKind kind)
   return name;
 }
 
-void akw_lexer_init(AkwLexer *lex, char *file, char *source, int *rc, AkwError err)
+void akw_lexer_init(AkwLexer *lex, char *source, int *rc, AkwError err)
 {
-  lex->file = file;
   lex->source = source;
   lex->curr = source;
   lex->ln = 1;

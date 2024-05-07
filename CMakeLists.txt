@@ -14,7 +14,13 @@ else()
   add_compile_options(-Wall -Wextra -Wpedantic -Werror)
 endif()
 
+if(NOT MSVC)
+  add_compile_options("$<$<CONFIG:Debug>:-fsanitize=address>")
+  add_link_options("$<$<CONFIG:Debug>:-fsanitize=address>")
+endif()
+
 add_executable(${PROJECT_NAME}
+  "src/buffer.c"
   "src/chunk.c"
   "src/compiler.c"
   "src/dump.c"
