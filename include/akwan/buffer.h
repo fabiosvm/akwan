@@ -31,6 +31,6 @@ void akw_buffer_init(AkwBuffer *buf);
 void akw_buffer_init_with_capacity(AkwBuffer *buf, int capacity, int *rc);
 void akw_buffer_deinit(AkwBuffer *buf);
 void akw_buffer_ensure_capacity(AkwBuffer *buf, int capacity, int *rc);
-void akw_buffer_write(AkwBuffer *buf, void *ptr, int count, int *rc);
+void akw_buffer_write(AkwBuffer *buf, int count, void *ptr, int *rc);
 
 #endif // AKW_BUFFER_H

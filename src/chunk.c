@@ -66,17 +66,23 @@ void akw_chunk_init(AkwChunk *chunk)
 void akw_chunk_deinit(AkwChunk *chunk)
 {
   akw_buffer_deinit(&chunk->code);
+  int n = chunk->consts.count;
+  for (int i = 0; i < n; ++i)
+  {
+    AkwValue val = akw_vector_get(&chunk->consts, i);
+    akw_value_release(val);
+  }
   akw_vector_deinit(&chunk->consts);
 }
 
 void akw_chunk_emit_opcode(AkwChunk *chunk, AkwOpcode op, int *rc)
 {
-  akw_buffer_write(&chunk->code, &op, sizeof(uint8_t), rc);
+  akw_buffer_write(&chunk->code, sizeof(uint8_t), &op,  rc);
 }
 
 void akw_chunk_emit_byte(AkwChunk *chunk, uint8_t byte, int *rc)
 {
-  akw_buffer_write(&chunk->code, &byte, sizeof(byte), rc);
+  akw_buffer_write(&chunk->code, sizeof(byte), &byte, rc);
 }
 
 int akw_chunk_append_constant(AkwChunk *chunk, AkwValue val, int *rc)
@@ -84,5 +90,6 @@ int akw_chunk_append_constant(AkwChunk *chunk, AkwValue val, int *rc)
   int index = chunk->consts.count;
   akw_vector_append(&chunk->consts, val, rc);
   if (!akw_is_ok(*rc)) return 0;
+  akw_value_retain(val);
   return index;
 }

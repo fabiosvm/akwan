@@ -28,6 +28,28 @@ const char *akw_type_name(AkwType type)
   return name;
 }
 
+void akw_value_free(AkwValue val)
+{
+  switch (akw_type(val))
+  {
+  case AKW_TYPE_NIL:
+  case AKW_TYPE_BOOL:
+  case AKW_TYPE_NUMBER:
+    break;
+  }
+}
+
+void akw_value_release(AkwValue val)
+{
+  switch (akw_type(val))
+  {
+  case AKW_TYPE_NIL:
+  case AKW_TYPE_BOOL:
+  case AKW_TYPE_NUMBER:
+    break;
+  }
+}
+
 void akw_value_print(AkwValue val)
 {
   switch (akw_type(val))

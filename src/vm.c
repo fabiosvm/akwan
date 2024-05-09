@@ -21,6 +21,7 @@
 typedef void (*AkwInstructionHandleFn)(AkwVM *, AkwChunk *, uint8_t *, AkwValue *);
 
 static inline void push(AkwVM *vm, AkwValue val);
+static inline void set_slot(AkwValue *slots, uint8_t index, AkwValue val);
 static void do_nil(AkwVM *vm, AkwChunk *chunk, uint8_t *ip, AkwValue *slots);
 static void do_false(AkwVM *vm, AkwChunk *chunk, uint8_t *ip, AkwValue *slots);
 static void do_true(AkwVM *vm, AkwChunk *chunk, uint8_t *ip, AkwValue *slots);
@@ -52,6 +53,13 @@ static inline void push(AkwVM *vm, AkwValue val)
     return;
   }
   akw_stack_push(&vm->stack, val);
+}
+
+static inline void set_slot(AkwValue *slots, uint8_t index, AkwValue val)
+{
+  akw_value_retain(val);
+  akw_value_release(slots[index]);
+  slots[index] = val;
 }
 
 static void do_nil(AkwVM *vm, AkwChunk *chunk, uint8_t *ip, AkwValue *slots)
@@ -86,6 +94,7 @@ static void do_const(AkwVM *vm, AkwChunk *chunk, uint8_t *ip, AkwValue *slots)
   AkwValue val = consts[index];
   push(vm, val);
   if (!akw_vm_is_ok(vm)) return;
+  akw_value_retain(val);
   dispatch(vm, chunk, ip, slots);
 }
 
@@ -96,6 +105,7 @@ static void do_load(AkwVM *vm, AkwChunk *chunk, uint8_t *ip, AkwValue *slots)
   AkwValue val = slots[index];
   push(vm, val);
   if (!akw_vm_is_ok(vm)) return;
+  akw_value_retain(val);
   dispatch(vm, chunk, ip, slots);
 }
 
@@ -104,7 +114,7 @@ static void do_store(AkwVM *vm, AkwChunk *chunk, uint8_t *ip, AkwValue *slots)
   uint8_t index = ip[1];
   ip += 2;
   AkwValue val = akw_stack_get(&vm->stack, 0);
-  slots[index] = val;
+  set_slot(slots, index, val);
   akw_stack_pop(&vm->stack);
   dispatch(vm, chunk, ip, slots);
 }
@@ -230,6 +240,12 @@ void akw_vm_init(AkwVM *vm, int stackSize)
 
 void akw_vm_deinit(AkwVM *vm)
 {
+  while (!akw_stack_is_empty(&vm->stack))
+  {
+    AkwValue val = akw_stack_get(&vm->stack, 0);
+    akw_stack_pop(&vm->stack);
+    akw_value_release(val);
+  }
   akw_stack_deinit(&vm->stack);
 }
 
@@ -238,4 +254,23 @@ void akw_vm_run(AkwVM *vm, AkwChunk *chunk)
   uint8_t *ip = chunk->code.bytes;
   AkwValue *slots = vm->stack.elements;
   dispatch(vm, chunk, ip, slots);
+}
+
+void akw_vm_push(AkwVM *vm, AkwValue val)
+{
+  push(vm, val);
+  if (!akw_vm_is_ok(vm)) return;
+  akw_value_retain(val);
+}
+
+AkwValue akw_vm_peek(AkwVM *vm)
+{
+  return akw_stack_get(&vm->stack, 0);
+}
+
+void akw_vm_pop(AkwVM *vm)
+{
+  AkwValue val = akw_stack_get(&vm->stack, 0);
+  akw_stack_pop(&vm->stack);
+  akw_value_release(val);
 }

@@ -29,5 +29,8 @@ typedef struct
 void akw_vm_init(AkwVM *vm, int stackSize);
 void akw_vm_deinit(AkwVM *vm);
 void akw_vm_run(AkwVM *vm, AkwChunk *chunk);
+void akw_vm_push(AkwVM *vm, AkwValue val);
+AkwValue akw_vm_peek(AkwVM *vm);
+void akw_vm_pop(AkwVM *vm);
 
 #endif // AKW_VM_H

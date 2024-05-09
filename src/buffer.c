@@ -59,7 +59,7 @@ void akw_buffer_ensure_capacity(AkwBuffer *buf, int capacity, int *rc)
   buf->bytes = newBytes;
 }
 
-void akw_buffer_write(AkwBuffer *buf, void *ptr, int count, int *rc)
+void akw_buffer_write(AkwBuffer *buf, int count, void *ptr, int *rc)
 {
   akw_buffer_ensure_capacity(buf, buf->count + count, rc);
   if (!akw_is_ok(*rc)) return;

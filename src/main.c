@@ -21,10 +21,10 @@ static inline void read_from_stdin(AkwBuffer *buf, int *rc)
   int c;
   while ((c = getchar()) != EOF)
   {
-    akw_buffer_write(buf, &c, 1, rc);
+    akw_buffer_write(buf, 1, &c, rc);
     if (!akw_is_ok(*rc)) return;
   }
-  akw_buffer_write(buf, "\0", 1, rc);
+  akw_buffer_write(buf, 1, "\0", rc);
 }
 
 static inline void print_error(char *err)
@@ -82,9 +82,9 @@ int main(void)
   }
 
   // Print result
-  AkwValue result = akw_stack_get(&vm.stack, 0);
+  AkwValue result = akw_vm_peek(&vm);
   akw_value_print(result);
-  akw_stack_pop(&vm.stack);
+  akw_vm_pop(&vm);
   printf("\n");
 
   // Cleanup
