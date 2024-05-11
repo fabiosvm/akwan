@@ -154,7 +154,10 @@ static inline void compile_stmt(AkwCompiler *comp)
     compile_return_stmt(comp);
     return;
   }
-  unexpected_token_error(comp);
+  compile_expr(comp);
+  if (!akw_compiler_is_ok(comp)) return;
+  consume(comp, AKW_TOKEN_KIND_SEMICOLON);
+  emit_opcode(comp, AKW_OP_POP);
 }
 
 static inline void compile_let_stmt(AkwCompiler *comp)

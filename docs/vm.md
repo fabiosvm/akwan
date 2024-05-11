@@ -13,6 +13,7 @@ Following is the instruction set:
 | `Const`  | _index_ | Push a constant value onto the stack |
 | `Load`   | _index_ | Load a value from the stack          |
 | `Store`  | _index_ | Store a value onto the stack         |
+| `Pop`    |         | Discard the top value from the stack |
 | `Add`    |         | Add two values                       |
 | `Sub`    |         | Subtract two values                  |
 | `Mul`    |         | Multiply two values                  |

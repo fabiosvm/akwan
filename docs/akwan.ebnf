@@ -3,6 +3,7 @@ chunk         ::= stmt* EOF
 
 stmt          ::= "let" NAME "=" expr ";"
                 | "return" expr? ";"
+                | expr ";"
 
 expr          ::= mul_expr ( ( "+" | "-" ) mul_expr )*
 

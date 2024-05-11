@@ -32,6 +32,9 @@ const char *akw_opcode_name(AkwOpcode op)
   case AKW_OP_STORE:
     name = "Store";
     break;
+  case AKW_OP_POP:
+    name = "Pop";
+    break;
   case AKW_OP_ADD:
     name = "Add";
     break;
