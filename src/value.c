@@ -10,6 +10,7 @@
 
 #include "akwan/value.h"
 #include <stdio.h>
+#include "akwan/string.h"
 
 const char *akw_type_name(AkwType type)
 {
@@ -24,6 +25,9 @@ const char *akw_type_name(AkwType type)
   case AKW_TYPE_NUMBER:
     name = "Number";
     break;
+  case AKW_TYPE_STRING:
+    name = "String";
+    break;
   }  
   return name;
 }
@@ -36,6 +40,9 @@ void akw_value_free(AkwValue val)
   case AKW_TYPE_BOOL:
   case AKW_TYPE_NUMBER:
     break;
+  case AKW_TYPE_STRING:
+    akw_string_free(akw_as_string(val));
+    break;
   }
 }
 
@@ -46,6 +53,9 @@ void akw_value_release(AkwValue val)
   case AKW_TYPE_NIL:
   case AKW_TYPE_BOOL:
   case AKW_TYPE_NUMBER:
+    break;
+  case AKW_TYPE_STRING:
+    akw_string_release(akw_as_string(val));
     break;
   }
 }
@@ -62,6 +72,9 @@ void akw_value_print(AkwValue val)
     break;
   case AKW_TYPE_NUMBER:
     printf("%g", akw_as_number(val));
+    break;
+  case AKW_TYPE_STRING:
+    akw_string_print(akw_as_string(val), false);
     break;
   }
 }

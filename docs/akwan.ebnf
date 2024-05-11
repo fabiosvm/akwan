@@ -10,6 +10,6 @@ mul_expr      ::= unary_expr ( ( "*" | "/" | "%" ) unary_expr )*
 
 unary_expr    ::= "-" unary_expr | prim_expr
 
-prim_expr     ::= "nil" | "false" | "true" | INT | NUMBER
+prim_expr     ::= "nil" | "false" | "true" | INT | NUMBER | STRING
                 | NAME
                 | "(" expr ")"

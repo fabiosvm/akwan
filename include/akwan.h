@@ -20,6 +20,7 @@
 #include "akwan/lexer.h"
 #include "akwan/memory.h"
 #include "akwan/stack.h"
+#include "akwan/string.h"
 #include "akwan/value.h"
 #include "akwan/vector.h"
 #include "akwan/vm.h"
