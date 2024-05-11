@@ -14,8 +14,8 @@
 #include <string.h>
 #include "akwan/common.h"
 
-#define char_at(s, i)   ((s)->curr[(i)])
-#define current_char(s) char_at(s, 0)
+#define char_at(l, i)   ((l)->curr[(i)])
+#define current_char(l) char_at(l, 0)
 
 static inline void skip_space(AkwLexer *lex);
 static inline void next_char(AkwLexer *lex);
@@ -23,8 +23,10 @@ static inline void next_chars(AkwLexer *lex, int length);
 static inline bool match_char(AkwLexer *lex, char c, AkwTokenKind kind);
 static inline bool match_keyword(AkwLexer *lex, const char *kw, AkwTokenKind kind);
 static inline bool match_number(AkwLexer *lex);
+static inline bool match_string(AkwLexer *lex, int *rc, AkwError err);
 static inline bool match_name(AkwLexer *lex);
-static inline AkwToken token(AkwLexer *lex, AkwTokenKind kind, int length);
+static inline AkwToken token(AkwLexer *lex, AkwTokenKind kind, int length,
+  char *chars);
 
 static inline void skip_space(AkwLexer *lex)
 {
@@ -55,7 +57,7 @@ static inline bool match_char(AkwLexer *lex, char c, AkwTokenKind kind)
 {
   if (current_char(lex) != c)
     return false;
-  lex->token = token(lex, kind, 1);
+  lex->token = token(lex, kind, 1, lex->curr);
   next_char(lex);
   return true;
 }
@@ -67,7 +69,7 @@ static inline bool match_keyword(AkwLexer *lex, const char *kw, AkwTokenKind kin
    || (isalnum(char_at(lex, length)))
    || (char_at(lex, length) == '_'))
     return false;
-  lex->token = token(lex, kind, length);  
+  lex->token = token(lex, kind, length, lex->curr);
   next_chars(lex, length);
   return true;
 }
@@ -109,8 +111,32 @@ static inline bool match_number(AkwLexer *lex)
     return false;
   kind = AKW_TOKEN_KIND_NUMBER;
 end:
-  lex->token = token(lex, kind, length);
+  lex->token = token(lex, kind, length, lex->curr);
   next_chars(lex, length);
+  return true;
+}
+
+static inline bool match_string(AkwLexer *lex, int *rc, AkwError err)
+{
+  if (current_char(lex) != '\"') return false;
+  int n = 1;
+  for (;;)
+  {
+    if (char_at(lex, n) == '\"')
+    {
+      ++n;
+      break;
+    }
+    if (char_at(lex, n) == '\0')
+    {
+      *rc = AKW_LEXICAL_ERROR;
+      akw_error_set(err, "unterminated string");
+      return false;
+    }
+    ++n;
+  }
+  lex->token = token(lex, AKW_TOKEN_KIND_STRING, n - 2, &lex->curr[1]);
+  next_chars(lex, n);
   return true;
 }
 
@@ -121,19 +147,20 @@ static inline bool match_name(AkwLexer *lex)
   int length = 1;
   while (char_at(lex, length) == '_' || isalnum(char_at(lex, length)))
     ++length;
-  lex->token = token(lex, AKW_TOKEN_KIND_NAME, length);
+  lex->token = token(lex, AKW_TOKEN_KIND_NAME, length, lex->curr);
   next_chars(lex, length);
   return true;
 }
 
-static inline AkwToken token(AkwLexer *lex, AkwTokenKind kind, int length)
+static inline AkwToken token(AkwLexer *lex, AkwTokenKind kind, int length,
+  char *chars)
 {
   return (AkwToken) {
     .kind = kind,
     .ln = lex->ln,
     .col = lex->col,
     .length = length,
-    .chars = lex->curr
+    .chars = chars
   };
 }
 
@@ -176,6 +203,9 @@ const char *akw_token_kind_name(AkwTokenKind kind)
     break;
   case AKW_TOKEN_KIND_NUMBER:
     name = "Number";
+    break;
+  case AKW_TOKEN_KIND_STRING:
+    name = "String";
     break;
   case AKW_TOKEN_KIND_FALSE_KW:
     name = "False";
@@ -222,6 +252,7 @@ void akw_lexer_next(AkwLexer *lex, int *rc, AkwError err)
   if (match_char(lex, '/', AKW_TOKEN_KIND_SLASH)) return;
   if (match_char(lex, '%', AKW_TOKEN_KIND_PERCENT)) return;
   if (match_number(lex)) return;
+  if (match_string(lex, rc, err) || !akw_is_ok(*rc)) return;
   if (match_keyword(lex, "false", AKW_TOKEN_KIND_FALSE_KW)) return;
   if (match_keyword(lex, "let", AKW_TOKEN_KIND_LET_KW)) return;
   if (match_keyword(lex, "nil", AKW_TOKEN_KIND_NIL_KW)) return;

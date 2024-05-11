@@ -12,6 +12,7 @@
 #include <assert.h>
 #include <stdlib.h>
 #include <string.h>
+#include "akwan/string.h"
 
 #define match(c, t) ((c)->lex.token.kind == (t))
 
@@ -285,6 +286,19 @@ static inline void compile_prim_expr(AkwCompiler *comp)
     next(comp);
     double num = strtod(token.chars, NULL);
     AkwValue val = akw_number_value(num);
+    uint8_t index = (uint8_t) akw_chunk_append_constant(&comp->chunk, val, &comp->rc);
+    if (!akw_compiler_is_ok(comp)) return;
+    emit_opcode(comp, AKW_OP_CONST);
+    emit_byte(comp, index);
+    return;
+  }
+  if (match(comp, AKW_TOKEN_KIND_STRING))
+  {
+    AkwToken token = comp->lex.token;
+    next(comp);
+    AkwString *str = akw_string_new_from(token.length, token.chars, &comp->rc);
+    if (!akw_compiler_is_ok(comp)) return;
+    AkwValue val = akw_string_value(str);
     uint8_t index = (uint8_t) akw_chunk_append_constant(&comp->chunk, val, &comp->rc);
     if (!akw_compiler_is_ok(comp)) return;
     emit_opcode(comp, AKW_OP_CONST);
