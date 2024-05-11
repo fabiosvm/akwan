@@ -60,6 +60,7 @@ static inline void compile_stmt(AkwCompiler *comp);
 static inline void compile_let_stmt(AkwCompiler *comp);
 static inline void compile_return_stmt(AkwCompiler *comp);
 static inline void compile_expr(AkwCompiler *comp);
+static inline void compile_add_expr(AkwCompiler *comp);
 static inline void compile_mul_expr(AkwCompiler *comp);
 static inline void compile_unary_expr(AkwCompiler *comp);
 static inline void compile_prim_expr(AkwCompiler *comp);
@@ -190,6 +191,19 @@ static inline void compile_return_stmt(AkwCompiler *comp)
 }
 
 static inline void compile_expr(AkwCompiler *comp)
+{
+  compile_add_expr(comp);
+  if (!akw_compiler_is_ok(comp)) return;
+  if (match(comp, AKW_TOKEN_KIND_DOTDOT))
+  {
+    next(comp);
+    compile_add_expr(comp);
+    if (!akw_compiler_is_ok(comp)) return;
+    emit_opcode(comp, AKW_OP_RANGE);
+  }
+}
+
+static inline void compile_add_expr(AkwCompiler *comp)
 {
   compile_mul_expr(comp);
   if (!akw_compiler_is_ok(comp)) return;

@@ -21,6 +21,7 @@ static inline void skip_space(AkwLexer *lex);
 static inline void next_char(AkwLexer *lex);
 static inline void next_chars(AkwLexer *lex, int length);
 static inline bool match_char(AkwLexer *lex, char c, AkwTokenKind kind);
+static inline bool match_chars(AkwLexer *lex, const char *chars, AkwTokenKind kind);
 static inline bool match_keyword(AkwLexer *lex, const char *kw, AkwTokenKind kind);
 static inline bool match_number(AkwLexer *lex);
 static inline bool match_string(AkwLexer *lex, int *rc, AkwError err);
@@ -59,6 +60,16 @@ static inline bool match_char(AkwLexer *lex, char c, AkwTokenKind kind)
     return false;
   lex->token = token(lex, kind, 1, lex->curr);
   next_char(lex);
+  return true;
+}
+
+static inline bool match_chars(AkwLexer *lex, const char *chars, AkwTokenKind kind)
+{
+  int length = (int) strlen(chars);
+  if (memcmp(lex->curr, chars, length))
+    return false;
+  lex->token = token(lex, kind, length, lex->curr);
+  next_chars(lex, length);
   return true;
 }
 
@@ -175,10 +186,10 @@ const char *akw_token_kind_name(AkwTokenKind kind)
     name = "Semicolon";
     break;
   case AKW_TOKEN_KIND_LPAREN:
-    name = "Lparen";
+    name = "LParen";
     break;
   case AKW_TOKEN_KIND_RPAREN:
-    name = "Rparen";
+    name = "RParen";
     break;
   case AKW_TOKEN_KIND_EQ:
     name = "Eq";
@@ -197,6 +208,9 @@ const char *akw_token_kind_name(AkwTokenKind kind)
     break;
   case AKW_TOKEN_KIND_PERCENT:
     name = "Percent";
+    break;
+  case AKW_TOKEN_KIND_DOTDOT:
+    name = "DotDot";
     break;
   case AKW_TOKEN_KIND_INT:
     name = "Int";
@@ -251,6 +265,7 @@ void akw_lexer_next(AkwLexer *lex, int *rc, AkwError err)
   if (match_char(lex, '*', AKW_TOKEN_KIND_STAR)) return;
   if (match_char(lex, '/', AKW_TOKEN_KIND_SLASH)) return;
   if (match_char(lex, '%', AKW_TOKEN_KIND_PERCENT)) return;
+  if (match_chars(lex, "..", AKW_TOKEN_KIND_DOTDOT)) return;
   if (match_number(lex)) return;
   if (match_string(lex, rc, err) || !akw_is_ok(*rc)) return;
   if (match_keyword(lex, "false", AKW_TOKEN_KIND_FALSE_KW)) return;

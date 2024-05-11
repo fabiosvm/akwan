@@ -27,6 +27,7 @@ void akw_dump_chunk(const AkwChunk *chunk)
     case AKW_OP_NIL:
     case AKW_OP_FALSE:
     case AKW_OP_TRUE:
+    case AKW_OP_RANGE:
     case AKW_OP_POP:
     case AKW_OP_ADD:
     case AKW_OP_SUB:

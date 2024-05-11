@@ -11,6 +11,7 @@ Following is the instruction set:
 | `False`  |         | Push a `false` value onto the stack  | 
 | `True`   |         | Push a `true` value onto the stack   |
 | `Const`  | _index_ | Push a constant value onto the stack |
+| `Range`  |         | Create a range from two integers     |
 | `Load`   | _index_ | Load a value from the stack          |
 | `Store`  | _index_ | Store a value onto the stack         |
 | `Pop`    |         | Discard the top value from the stack |

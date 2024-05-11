@@ -5,7 +5,9 @@ stmt          ::= "let" NAME "=" expr ";"
                 | "return" expr? ";"
                 | expr ";"
 
-expr          ::= mul_expr ( ( "+" | "-" ) mul_expr )*
+expr          ::= add_expr ( ".." add_expr )?
+
+add_expr      ::= mul_expr ( ( "+" | "-" ) mul_expr )*
 
 mul_expr      ::= unary_expr ( ( "*" | "/" | "%" ) unary_expr )*
 

@@ -1,3 +1,3 @@
 @echo off
 
-echo return 1 + 2; | build\Debug\akwan.exe
+build\Debug\akwan.exe < examples\hello.akw
