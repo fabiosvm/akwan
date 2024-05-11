@@ -13,8 +13,8 @@
 
 #include <stdbool.h>
 
-#define AKW_FALG_FALSY  (0x01)
-#define AKW_FLAG_OBJECT (0x02)
+#define AKW_FALG_FALSY  (1 << 0)
+#define AKW_FLAG_OBJECT (1 << 1)
 
 #define akw_nil_value()     ((AkwValue) { .type = AKW_TYPE_NIL, .flags = AKW_FALG_FALSY })
 #define akw_bool_value(b)   ((AkwValue) { .type = AKW_TYPE_BOOL, .flags = (b) ? 0 : AKW_FALG_FALSY, .asBool = (b) })

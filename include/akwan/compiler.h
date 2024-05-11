@@ -14,6 +14,8 @@
 #include "chunk.h"
 #include "lexer.h"
 
+#define AKW_COMPILER_FLAG_CHECK_ONLY (1 << 0)
+
 #define akw_compiler_is_ok(c) (akw_is_ok((c)->rc))
 
 typedef struct
@@ -24,6 +26,7 @@ typedef struct
 
 typedef struct
 {
+  int                  flags;
   int                  rc;
   AkwError             err;
   AkwLexer             lex;
@@ -31,7 +34,7 @@ typedef struct
   AkwChunk             chunk;
 } AkwCompiler;
 
-void akw_compiler_init(AkwCompiler *comp, char *source);
+void akw_compiler_init(AkwCompiler *comp, int flags, char *source);
 void akw_compiler_deinit(AkwCompiler *comp);
 void akw_compiler_compile(AkwCompiler *comp);
 

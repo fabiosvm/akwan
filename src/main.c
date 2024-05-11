@@ -49,7 +49,7 @@ int main(void)
 
   // Compile
   AkwCompiler comp;
-  akw_compiler_init(&comp, (char *) buf.bytes);
+  akw_compiler_init(&comp, 0, (char *) buf.bytes);
   if (!akw_compiler_is_ok(&comp))
   {
     print_error(comp.err);

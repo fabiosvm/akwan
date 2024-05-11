@@ -31,6 +31,8 @@
     next(c); \
   } while (0)
 
+#define is_check_only(c) ((c)->flags & AKW_COMPILER_FLAG_CHECK_ONLY)
+
 #define check_code(c) \
   do { \
     if (akw_compiler_is_ok(c)) break; \
@@ -41,12 +43,14 @@
 
 #define emit_opcode(c, op) \
   do { \
+    if (is_check_only(c)) break; \
     akw_chunk_emit_opcode(&(c)->chunk, (op), &(c)->rc); \
     check_code(c); \
   } while (0)
 
 #define emit_byte(c, b) \
   do { \
+    if (is_check_only(c)) break; \
     akw_chunk_emit_byte(&(c)->chunk, (b), &(c)->rc); \
     check_code(c); \
   } while (0)
@@ -64,6 +68,9 @@ static inline void compile_add_expr(AkwCompiler *comp);
 static inline void compile_mul_expr(AkwCompiler *comp);
 static inline void compile_unary_expr(AkwCompiler *comp);
 static inline void compile_prim_expr(AkwCompiler *comp);
+static inline void compile_number(AkwCompiler *comp);
+static inline void compile_string(AkwCompiler *comp);
+static inline void compile_symbol(AkwCompiler *comp);
 
 static inline bool token_equal(AkwToken *token1, AkwToken *token2)
 {
@@ -145,13 +152,11 @@ static inline void compile_stmt(AkwCompiler *comp)
 {
   if (match(comp, AKW_TOKEN_KIND_LET_KW))
   {
-    next(comp);
     compile_let_stmt(comp);
     return;
   }
   if (match(comp, AKW_TOKEN_KIND_RETURN_KW))
   {
-    next(comp);
     compile_return_stmt(comp);
     return;
   }
@@ -163,6 +168,7 @@ static inline void compile_stmt(AkwCompiler *comp)
 
 static inline void compile_let_stmt(AkwCompiler *comp)
 {
+  next(comp);
   if (!match(comp, AKW_TOKEN_KIND_NAME))
   {
     unexpected_token_error(comp);
@@ -179,6 +185,7 @@ static inline void compile_let_stmt(AkwCompiler *comp)
 
 static inline void compile_return_stmt(AkwCompiler *comp)
 {
+  next(comp);
   if (match(comp, AKW_TOKEN_KIND_SEMICOLON))
   {
     next(comp);
@@ -296,40 +303,20 @@ static inline void compile_prim_expr(AkwCompiler *comp)
     emit_opcode(comp, AKW_OP_TRUE);
     return;
   }
-  if (match(comp, AKW_TOKEN_KIND_INT)
+    if (match(comp, AKW_TOKEN_KIND_INT)
    || match(comp, AKW_TOKEN_KIND_NUMBER))
   {
-    AkwToken token = comp->lex.token;
-    next(comp);
-    double num = strtod(token.chars, NULL);
-    AkwValue val = akw_number_value(num);
-    uint8_t index = (uint8_t) akw_chunk_append_constant(&comp->chunk, val, &comp->rc);
-    if (!akw_compiler_is_ok(comp)) return;
-    emit_opcode(comp, AKW_OP_CONST);
-    emit_byte(comp, index);
+    compile_number(comp);
     return;
   }
   if (match(comp, AKW_TOKEN_KIND_STRING))
   {
-    AkwToken token = comp->lex.token;
-    next(comp);
-    AkwString *str = akw_string_new_from(token.length, token.chars, &comp->rc);
-    if (!akw_compiler_is_ok(comp)) return;
-    AkwValue val = akw_string_value(str);
-    uint8_t index = (uint8_t) akw_chunk_append_constant(&comp->chunk, val, &comp->rc);
-    if (!akw_compiler_is_ok(comp)) return;
-    emit_opcode(comp, AKW_OP_CONST);
-    emit_byte(comp, index);
+    compile_string(comp);
     return;
   }
   if (match(comp, AKW_TOKEN_KIND_NAME))
   {
-    AkwToken token = comp->lex.token;
-    next(comp);
-    uint8_t index = find_symbol(comp, &token);
-    if (!akw_compiler_is_ok(comp)) return;
-    emit_opcode(comp, AKW_OP_LOAD);
-    emit_byte(comp, index);
+    compile_symbol(comp);
     return;
   }
   if (match(comp, AKW_TOKEN_KIND_LPAREN))
@@ -343,8 +330,46 @@ static inline void compile_prim_expr(AkwCompiler *comp)
   unexpected_token_error(comp);
 }
 
-void akw_compiler_init(AkwCompiler *comp, char *source)
+static inline void compile_number(AkwCompiler *comp)
 {
+  AkwToken token = comp->lex.token;
+  next(comp);
+  if (is_check_only(comp)) return;
+  double num = strtod(token.chars, NULL);
+  AkwValue val = akw_number_value(num);
+  uint8_t index = (uint8_t) akw_chunk_append_constant(&comp->chunk, val, &comp->rc);
+  if (!akw_compiler_is_ok(comp)) return;
+  emit_opcode(comp, AKW_OP_CONST);
+  emit_byte(comp, index);
+}
+
+static inline void compile_string(AkwCompiler *comp)
+{
+  AkwToken token = comp->lex.token;
+  next(comp);
+  if (is_check_only(comp)) return;
+  AkwString *str = akw_string_new_from(token.length, token.chars, &comp->rc);
+  if (!akw_compiler_is_ok(comp)) return;
+  AkwValue val = akw_string_value(str);
+  uint8_t index = (uint8_t) akw_chunk_append_constant(&comp->chunk, val, &comp->rc);
+  if (!akw_compiler_is_ok(comp)) return;
+  emit_opcode(comp, AKW_OP_CONST);
+  emit_byte(comp, index);
+}
+
+static inline void compile_symbol(AkwCompiler *comp)
+{
+  AkwToken token = comp->lex.token;
+  next(comp);
+  uint8_t index = find_symbol(comp, &token);
+  if (!akw_compiler_is_ok(comp)) return;
+  emit_opcode(comp, AKW_OP_LOAD);
+  emit_byte(comp, index);
+}
+
+void akw_compiler_init(AkwCompiler *comp, int flags, char *source)
+{
+  comp->flags = flags;
   comp->rc = AKW_OK;
   akw_lexer_init(&comp->lex, source, &comp->rc, comp->err);
   if (!akw_compiler_is_ok(comp)) return;
