@@ -11,7 +11,7 @@
 #ifndef AKW_COMPILER_H
 #define AKW_COMPILER_H
 
-#include "chunk.h"
+#include "function.h"
 #include "lexer.h"
 
 #define AKW_COMPILER_FLAG_CHECK_ONLY (1 << 0)
@@ -31,7 +31,7 @@ typedef struct
   AkwError             err;
   AkwLexer             lex;
   AkwVector(AkwSymbol) symbols;
-  AkwChunk             chunk;
+  AkwFunction          fn;
 } AkwCompiler;
 
 void akw_compiler_init(AkwCompiler *comp, int flags, char *source);

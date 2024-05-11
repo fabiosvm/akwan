@@ -17,6 +17,7 @@
 #include "akwan/compiler.h"
 #include "akwan/dump.h"
 #include "akwan/error.h"
+#include "akwan/function.h"
 #include "akwan/lexer.h"
 #include "akwan/memory.h"
 #include "akwan/range.h"

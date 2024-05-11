@@ -8,6 +8,30 @@
 // located in the root directory of this project.
 //
 
+/*
+chunk         ::= stmt* EOF
+
+stmt          ::= "let" NAME ( "=" expr )? ";"
+                | NAME "=" expr ";"
+                | "return" expr? ";"
+                | expr ";"
+
+expr          ::= add_expr ( ".." add_expr )?
+
+add_expr      ::= mul_expr ( ( "+" | "-" ) mul_expr )*
+
+mul_expr      ::= unary_expr ( ( "*" | "/" | "%" ) unary_expr )*
+
+unary_expr    ::= "-" unary_expr | call_expr
+
+call_expr     ::= prim_expr ( "(" ( expr ( "," expr )* )? ")" )*
+
+prim_expr     ::= "nil" | "false" | "true" | INT | NUMBER | STRING
+                | "fn" "(" ( NAME ( "," NAME )* )? ")" "{" stmt* "}"
+                | NAME
+                | "(" expr ")"
+*/
+
 #include "akwan/compiler.h"
 #include <assert.h>
 #include <stdlib.h>
@@ -44,14 +68,14 @@
 #define emit_opcode(c, op) \
   do { \
     if (is_check_only(c)) break; \
-    akw_chunk_emit_opcode(&(c)->chunk, (op), &(c)->rc); \
+    akw_chunk_emit_opcode(&(c)->fn.chunk, (op), &(c)->rc); \
     check_code(c); \
   } while (0)
 
 #define emit_byte(c, b) \
   do { \
     if (is_check_only(c)) break; \
-    akw_chunk_emit_byte(&(c)->chunk, (b), &(c)->rc); \
+    akw_chunk_emit_byte(&(c)->fn.chunk, (b), &(c)->rc); \
     check_code(c); \
   } while (0)
 
@@ -68,6 +92,7 @@ static inline void compile_expr(AkwCompiler *comp);
 static inline void compile_add_expr(AkwCompiler *comp);
 static inline void compile_mul_expr(AkwCompiler *comp);
 static inline void compile_unary_expr(AkwCompiler *comp);
+static inline void compile_call_expr(AkwCompiler *comp);
 static inline void compile_prim_expr(AkwCompiler *comp);
 static inline void compile_number(AkwCompiler *comp);
 static inline void compile_string(AkwCompiler *comp);
@@ -151,6 +176,12 @@ static inline void compile_chunk(AkwCompiler *comp)
   emit_opcode(comp, AKW_OP_RETURN);
 }
 
+/*
+stmt          ::= "let" NAME ( "=" expr )? ";"
+                | NAME "=" expr ";"
+                | "return" expr? ";"
+                | expr ";"
+*/
 static inline void compile_stmt(AkwCompiler *comp)
 {
   if (match(comp, AKW_TOKEN_KIND_LET_KW))
@@ -297,6 +328,9 @@ static inline void compile_mul_expr(AkwCompiler *comp)
   }
 }
 
+/*
+unary_expr    ::= "-" unary_expr | call_expr
+*/
 static inline void compile_unary_expr(AkwCompiler *comp)
 {
   if (match(comp, AKW_TOKEN_KIND_MINUS))
@@ -307,9 +341,50 @@ static inline void compile_unary_expr(AkwCompiler *comp)
     emit_opcode(comp, AKW_OP_NEG);
     return;
   }
-  compile_prim_expr(comp);
+  compile_call_expr(comp);
 }
 
+/*
+call_expr     ::= prim_expr ( "(" ( expr ( "," expr )* )? ")" )*
+*/
+static inline void compile_call_expr(AkwCompiler *comp)
+{
+  compile_prim_expr(comp);
+  if (!akw_compiler_is_ok(comp)) return;
+  for (;;)
+  {
+    if (!match(comp, AKW_TOKEN_KIND_LPAREN))
+      break;
+    next(comp);
+    if (match(comp, AKW_TOKEN_KIND_RPAREN))
+    {
+      next(comp);
+      emit_opcode(comp, AKW_OP_CALL);
+      emit_byte(comp, 0);
+      continue;
+    }
+    compile_expr(comp);
+    if (!akw_compiler_is_ok(comp)) return;
+    uint8_t n = 1;
+    while (match(comp, AKW_TOKEN_KIND_COMMA))
+    {
+      next(comp);
+      compile_expr(comp);
+      if (!akw_compiler_is_ok(comp)) return;
+      ++n;
+    }
+    consume(comp, AKW_TOKEN_KIND_RPAREN);
+    emit_opcode(comp, AKW_OP_CALL);
+    emit_byte(comp, n);
+  }
+}
+
+/*
+prim_expr     ::= "nil" | "false" | "true" | INT | NUMBER | STRING
+                | "fn" "(" ( NAME ( "," NAME )* )? ")" "{" stmt* "}"
+                | NAME
+                | "(" expr ")"
+*/
 static inline void compile_prim_expr(AkwCompiler *comp)
 {
   if (match(comp, AKW_TOKEN_KIND_NIL_KW))
@@ -341,6 +416,53 @@ static inline void compile_prim_expr(AkwCompiler *comp)
     compile_string(comp);
     return;
   }
+  if (match(comp, AKW_TOKEN_KIND_FN_KW))
+  {
+    // TODO: Emit bytecode for function.
+    next(comp);
+    consume(comp, AKW_TOKEN_KIND_LPAREN);
+    if (match(comp, AKW_TOKEN_KIND_RPAREN))
+    {
+      next(comp);
+      consume(comp, AKW_TOKEN_KIND_LBRACE);
+      while (!match(comp, AKW_TOKEN_KIND_RBRACE))
+      {
+        compile_stmt(comp);
+        if (!akw_compiler_is_ok(comp)) return;
+      }
+      next(comp);
+      return;
+    }
+    if (!match(comp, AKW_TOKEN_KIND_NAME))
+    {
+      unexpected_token_error(comp);
+      return;
+    }
+    AkwToken token = comp->lex.token;
+    next(comp);
+    (void) token;
+    while (match(comp, AKW_TOKEN_KIND_COMMA))
+    {
+      next(comp);
+      if (!match(comp, AKW_TOKEN_KIND_NAME))
+      {
+        unexpected_token_error(comp);
+        return;
+      }
+      token = comp->lex.token;
+      next(comp);
+      (void) token;
+    }
+    consume(comp, AKW_TOKEN_KIND_RPAREN);
+    consume(comp, AKW_TOKEN_KIND_LBRACE);
+    while (!match(comp, AKW_TOKEN_KIND_RBRACE))
+    {
+      compile_stmt(comp);
+      if (!akw_compiler_is_ok(comp)) return;
+    }
+    next(comp);
+    return;
+  }
   if (match(comp, AKW_TOKEN_KIND_NAME))
   {
     compile_symbol(comp);
@@ -364,7 +486,7 @@ static inline void compile_number(AkwCompiler *comp)
   if (is_check_only(comp)) return;
   double num = strtod(token.chars, NULL);
   AkwValue val = akw_number_value(num);
-  uint8_t index = (uint8_t) akw_chunk_append_constant(&comp->chunk, val, &comp->rc);
+  uint8_t index = (uint8_t) akw_chunk_append_constant(&comp->fn.chunk, val, &comp->rc);
   if (!akw_compiler_is_ok(comp)) return;
   emit_opcode(comp, AKW_OP_CONST);
   emit_byte(comp, index);
@@ -378,7 +500,7 @@ static inline void compile_string(AkwCompiler *comp)
   AkwString *str = akw_string_new_from(token.length, token.chars, &comp->rc);
   if (!akw_compiler_is_ok(comp)) return;
   AkwValue val = akw_string_value(str);
-  uint8_t index = (uint8_t) akw_chunk_append_constant(&comp->chunk, val, &comp->rc);
+  uint8_t index = (uint8_t) akw_chunk_append_constant(&comp->fn.chunk, val, &comp->rc);
   if (!akw_compiler_is_ok(comp)) return;
   emit_opcode(comp, AKW_OP_CONST);
   emit_byte(comp, index);
@@ -401,13 +523,13 @@ void akw_compiler_init(AkwCompiler *comp, int flags, char *source)
   akw_lexer_init(&comp->lex, source, &comp->rc, comp->err);
   if (!akw_compiler_is_ok(comp)) return;
   akw_vector_init(&comp->symbols);
-  akw_chunk_init(&comp->chunk);
+  akw_chunk_init(&comp->fn.chunk);
 }
 
 void akw_compiler_deinit(AkwCompiler *comp)
 {
   akw_vector_deinit(&comp->symbols);
-  akw_chunk_deinit(&comp->chunk);
+  akw_chunk_deinit(&comp->fn.chunk);
 }
 
 void akw_compiler_compile(AkwCompiler *comp)

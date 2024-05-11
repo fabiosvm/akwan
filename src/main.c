@@ -66,12 +66,12 @@ int main(void)
   }
 
   // Dump
-  akw_dump_chunk(&comp.chunk);
+  akw_dump_chunk(&comp.fn.chunk);
 
   // Run
   AkwVM vm;
-  akw_vm_init(&vm, AKW_VM_DEFAULT_STACK_SIZE);
-  akw_vm_run(&vm, &comp.chunk);
+  akw_vm_init(&vm, AKW_VM_DEFAULT_STACK_SIZE, AKW_VM_DEFAULT_CALLSTACK_SIZE);
+  akw_vm_run(&vm, &comp.fn);
   if (!akw_vm_is_ok(&vm))
   {
     print_error(vm.err);

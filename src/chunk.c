@@ -56,6 +56,9 @@ const char *akw_opcode_name(AkwOpcode op)
   case AKW_OP_NEG:
     name = "Neg";
     break;
+  case AKW_OP_CALL:
+    name = "Call";
+    break;
   case AKW_OP_RETURN:
     name = "Return";
     break;

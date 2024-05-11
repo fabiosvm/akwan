@@ -21,4 +21,5 @@ Following is the instruction set:
 | `Div`    |         | Divide two values                    |
 | `Mod`    |         | Modulo of two values                 |
 | `Neg`    |         | Negate a value                       |
+| `Call`   | _n_     | Call a function with `n` arguments   |
 | `Return` |         | Return from the function             |

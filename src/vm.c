@@ -12,39 +12,41 @@
 #include <math.h>
 #include "akwan/range.h"
 
-#define dispatch(vm, c, ip, s) \
+#define dispatch(vm, f, ip, s) \
   do { \
     AkwOpcode op = (AkwOpcode) ip[0]; \
     AkwInstructionHandleFn handle = instructionHandles[op]; \
-    handle((vm), (c), (ip), (s)); \
+    handle((vm), (f), (ip), (s)); \
   } while (0)
 
-typedef void (*AkwInstructionHandleFn)(AkwVM *, AkwChunk *, uint8_t *, AkwValue *);
+typedef void (*AkwInstructionHandleFn)(AkwVM *, AkwFunction *, uint8_t *, AkwValue *);
 
 static inline void push(AkwVM *vm, AkwValue val);
 static inline void set_slot(AkwValue *slots, uint8_t index, AkwValue val);
-static void do_nil(AkwVM *vm, AkwChunk *chunk, uint8_t *ip, AkwValue *slots);
-static void do_false(AkwVM *vm, AkwChunk *chunk, uint8_t *ip, AkwValue *slots);
-static void do_true(AkwVM *vm, AkwChunk *chunk, uint8_t *ip, AkwValue *slots);
-static void do_const(AkwVM *vm, AkwChunk *chunk, uint8_t *ip, AkwValue *slots);
-static void do_range(AkwVM *vm, AkwChunk *chunk, uint8_t *ip, AkwValue *slots);
-static void do_load(AkwVM *vm, AkwChunk *chunk, uint8_t *ip, AkwValue *slots);
-static void do_store(AkwVM *vm, AkwChunk *chunk, uint8_t *ip, AkwValue *slots);
-static void do_pop(AkwVM *vm, AkwChunk *chunk, uint8_t *ip, AkwValue *slots);
-static void do_add(AkwVM *vm, AkwChunk *chunk, uint8_t *ip, AkwValue *slots);
-static void do_sub(AkwVM *vm, AkwChunk *chunk, uint8_t *ip, AkwValue *slots);
-static void do_mul(AkwVM *vm, AkwChunk *chunk, uint8_t *ip, AkwValue *slots);
-static void do_div(AkwVM *vm, AkwChunk *chunk, uint8_t *ip, AkwValue *slots);
-static void do_mod(AkwVM *vm, AkwChunk *chunk, uint8_t *ip, AkwValue *slots);
-static void do_neg(AkwVM *vm, AkwChunk *chunk, uint8_t *ip, AkwValue *slots);
-static void do_return(AkwVM *vm, AkwChunk *chunk, uint8_t *ip, AkwValue *slots);
+static void do_nil(AkwVM *vm, AkwFunction *fn, uint8_t *ip, AkwValue *slots);
+static void do_false(AkwVM *vm, AkwFunction *fn, uint8_t *ip, AkwValue *slots);
+static void do_true(AkwVM *vm, AkwFunction *fn, uint8_t *ip, AkwValue *slots);
+static void do_const(AkwVM *vm, AkwFunction *fn, uint8_t *ip, AkwValue *slots);
+static void do_range(AkwVM *vm, AkwFunction *fn, uint8_t *ip, AkwValue *slots);
+static void do_load(AkwVM *vm, AkwFunction *fn, uint8_t *ip, AkwValue *slots);
+static void do_store(AkwVM *vm, AkwFunction *fn, uint8_t *ip, AkwValue *slots);
+static void do_pop(AkwVM *vm, AkwFunction *fn, uint8_t *ip, AkwValue *slots);
+static void do_add(AkwVM *vm, AkwFunction *fn, uint8_t *ip, AkwValue *slots);
+static void do_sub(AkwVM *vm, AkwFunction *fn, uint8_t *ip, AkwValue *slots);
+static void do_mul(AkwVM *vm, AkwFunction *fn, uint8_t *ip, AkwValue *slots);
+static void do_div(AkwVM *vm, AkwFunction *fn, uint8_t *ip, AkwValue *slots);
+static void do_mod(AkwVM *vm, AkwFunction *fn, uint8_t *ip, AkwValue *slots);
+static void do_neg(AkwVM *vm, AkwFunction *fn, uint8_t *ip, AkwValue *slots);
+static void do_call(AkwVM *vm, AkwFunction *fn, uint8_t *ip, AkwValue *slots);
+static void do_return(AkwVM *vm, AkwFunction *fn, uint8_t *ip, AkwValue *slots);
 
 static AkwInstructionHandleFn instructionHandles[] = {
-  [AKW_OP_NIL]   = do_nil,   [AKW_OP_FALSE] = do_false, [AKW_OP_TRUE]   = do_true,
-  [AKW_OP_CONST] = do_const, [AKW_OP_RANGE] = do_range, [AKW_OP_LOAD]   = do_load,
-  [AKW_OP_STORE] = do_store, [AKW_OP_POP]   = do_pop,   [AKW_OP_ADD]    = do_add,
-  [AKW_OP_SUB]   = do_sub,   [AKW_OP_MUL]   = do_mul,   [AKW_OP_DIV]    = do_div,
-  [AKW_OP_MOD]   = do_mod,   [AKW_OP_NEG]   = do_neg,   [AKW_OP_RETURN] = do_return
+  [AKW_OP_NIL]    = do_nil,   [AKW_OP_FALSE] = do_false, [AKW_OP_TRUE] = do_true,
+  [AKW_OP_CONST]  = do_const, [AKW_OP_RANGE] = do_range, [AKW_OP_LOAD] = do_load,
+  [AKW_OP_STORE]  = do_store, [AKW_OP_POP]   = do_pop,   [AKW_OP_ADD]  = do_add,
+  [AKW_OP_SUB]    = do_sub,   [AKW_OP_MUL]   = do_mul,   [AKW_OP_DIV]  = do_div,
+  [AKW_OP_MOD]    = do_mod,   [AKW_OP_NEG]   = do_neg,   [AKW_OP_CALL] = do_call,
+  [AKW_OP_RETURN] = do_return
 };
 
 static inline void push(AkwVM *vm, AkwValue val)
@@ -65,43 +67,43 @@ static inline void set_slot(AkwValue *slots, uint8_t index, AkwValue val)
   slots[index] = val;
 }
 
-static void do_nil(AkwVM *vm, AkwChunk *chunk, uint8_t *ip, AkwValue *slots)
+static void do_nil(AkwVM *vm, AkwFunction *fn, uint8_t *ip, AkwValue *slots)
 {
   ++ip;
   push(vm, akw_nil_value());
   if (!akw_vm_is_ok(vm)) return;
-  dispatch(vm, chunk, ip, slots);
+  dispatch(vm, fn, ip, slots);
 }
 
-static void do_false(AkwVM *vm, AkwChunk *chunk, uint8_t *ip, AkwValue *slots)
+static void do_false(AkwVM *vm, AkwFunction *fn, uint8_t *ip, AkwValue *slots)
 {
   ++ip;
   push(vm, akw_bool_value(false));
   if (!akw_vm_is_ok(vm)) return;
-  dispatch(vm, chunk, ip, slots);
+  dispatch(vm, fn, ip, slots);
 }
 
-static void do_true(AkwVM *vm, AkwChunk *chunk, uint8_t *ip, AkwValue *slots)
+static void do_true(AkwVM *vm, AkwFunction *fn, uint8_t *ip, AkwValue *slots)
 {
   ++ip;
   push(vm, akw_bool_value(true));
   if (!akw_vm_is_ok(vm)) return;
-  dispatch(vm, chunk, ip, slots);
+  dispatch(vm, fn, ip, slots);
 }
 
-static void do_const(AkwVM *vm, AkwChunk *chunk, uint8_t *ip, AkwValue *slots)
+static void do_const(AkwVM *vm, AkwFunction *fn, uint8_t *ip, AkwValue *slots)
 {
   uint8_t index = ip[1];
   ip += 2;
-  AkwValue *consts = chunk->consts.elements;
+  AkwValue *consts = fn->chunk.consts.elements;
   AkwValue val = consts[index];
   push(vm, val);
   if (!akw_vm_is_ok(vm)) return;
   akw_value_retain(val);
-  dispatch(vm, chunk, ip, slots);
+  dispatch(vm, fn, ip, slots);
 }
 
-static void do_range(AkwVM *vm, AkwChunk *chunk, uint8_t *ip, AkwValue *slots)
+static void do_range(AkwVM *vm, AkwFunction *fn, uint8_t *ip, AkwValue *slots)
 {
   ++ip;
   AkwValue val1 = akw_stack_get(&vm->stack, 1);
@@ -119,10 +121,10 @@ static void do_range(AkwVM *vm, AkwChunk *chunk, uint8_t *ip, AkwValue *slots)
   akw_stack_set(&vm->stack, 1, akw_range_value(range));
   akw_object_retain(&range->obj);
   akw_stack_pop(&vm->stack);
-  dispatch(vm, chunk, ip, slots);
+  dispatch(vm, fn, ip, slots);
 }
 
-static void do_load(AkwVM *vm, AkwChunk *chunk, uint8_t *ip, AkwValue *slots)
+static void do_load(AkwVM *vm, AkwFunction *fn, uint8_t *ip, AkwValue *slots)
 {
   uint8_t index = ip[1];
   ip += 2;
@@ -130,29 +132,29 @@ static void do_load(AkwVM *vm, AkwChunk *chunk, uint8_t *ip, AkwValue *slots)
   push(vm, val);
   if (!akw_vm_is_ok(vm)) return;
   akw_value_retain(val);
-  dispatch(vm, chunk, ip, slots);
+  dispatch(vm, fn, ip, slots);
 }
 
-static void do_store(AkwVM *vm, AkwChunk *chunk, uint8_t *ip, AkwValue *slots)
+static void do_store(AkwVM *vm, AkwFunction *fn, uint8_t *ip, AkwValue *slots)
 {
   uint8_t index = ip[1];
   ip += 2;
   AkwValue val = akw_stack_get(&vm->stack, 0);
   set_slot(slots, index, val);
   akw_stack_pop(&vm->stack);
-  dispatch(vm, chunk, ip, slots);
+  dispatch(vm, fn, ip, slots);
 }
 
-static void do_pop(AkwVM *vm, AkwChunk *chunk, uint8_t *ip, AkwValue *slots)
+static void do_pop(AkwVM *vm, AkwFunction *fn, uint8_t *ip, AkwValue *slots)
 {
   ++ip;
   AkwValue val = akw_stack_get(&vm->stack, 0);
   akw_stack_pop(&vm->stack);
   akw_value_release(val);
-  dispatch(vm, chunk, ip, slots);
+  dispatch(vm, fn, ip, slots);
 }
 
-static void do_add(AkwVM *vm, AkwChunk *chunk, uint8_t *ip, AkwValue *slots)
+static void do_add(AkwVM *vm, AkwFunction *fn, uint8_t *ip, AkwValue *slots)
 {
   ++ip;
   AkwValue val1 = akw_stack_get(&vm->stack, 1);
@@ -167,10 +169,10 @@ static void do_add(AkwVM *vm, AkwChunk *chunk, uint8_t *ip, AkwValue *slots)
   double num = akw_as_number(val1) + akw_as_number(val2);
   akw_stack_set(&vm->stack, 1, akw_number_value(num));
   akw_stack_pop(&vm->stack);
-  dispatch(vm, chunk, ip, slots);
+  dispatch(vm, fn, ip, slots);
 }
 
-static void do_sub(AkwVM *vm, AkwChunk *chunk, uint8_t *ip, AkwValue *slots)
+static void do_sub(AkwVM *vm, AkwFunction *fn, uint8_t *ip, AkwValue *slots)
 {
   ++ip;
   AkwValue val1 = akw_stack_get(&vm->stack, 1);
@@ -185,10 +187,10 @@ static void do_sub(AkwVM *vm, AkwChunk *chunk, uint8_t *ip, AkwValue *slots)
   double num = akw_as_number(val1) - akw_as_number(val2);
   akw_stack_set(&vm->stack, 1, akw_number_value(num));
   akw_stack_pop(&vm->stack);
-  dispatch(vm, chunk, ip, slots);
+  dispatch(vm, fn, ip, slots);
 }
 
-static void do_mul(AkwVM *vm, AkwChunk *chunk, uint8_t *ip, AkwValue *slots)
+static void do_mul(AkwVM *vm, AkwFunction *fn, uint8_t *ip, AkwValue *slots)
 {
   ++ip;
   AkwValue val1 = akw_stack_get(&vm->stack, 1);
@@ -203,10 +205,10 @@ static void do_mul(AkwVM *vm, AkwChunk *chunk, uint8_t *ip, AkwValue *slots)
   double num = akw_as_number(val1) * akw_as_number(val2);
   akw_stack_set(&vm->stack, 1, akw_number_value(num));
   akw_stack_pop(&vm->stack);
-  dispatch(vm, chunk, ip, slots);
+  dispatch(vm, fn, ip, slots);
 }
 
-static void do_div(AkwVM *vm, AkwChunk *chunk, uint8_t *ip, AkwValue *slots)
+static void do_div(AkwVM *vm, AkwFunction *fn, uint8_t *ip, AkwValue *slots)
 {
   ++ip;
   AkwValue val1 = akw_stack_get(&vm->stack, 1);
@@ -221,10 +223,10 @@ static void do_div(AkwVM *vm, AkwChunk *chunk, uint8_t *ip, AkwValue *slots)
   double num = akw_as_number(val1) / akw_as_number(val2);
   akw_stack_set(&vm->stack, 1, akw_number_value(num));
   akw_stack_pop(&vm->stack);
-  dispatch(vm, chunk, ip, slots);
+  dispatch(vm, fn, ip, slots);
 }
 
-static void do_mod(AkwVM *vm, AkwChunk *chunk, uint8_t *ip, AkwValue *slots)
+static void do_mod(AkwVM *vm, AkwFunction *fn, uint8_t *ip, AkwValue *slots)
 {
   ++ip;
   AkwValue val1 = akw_stack_get(&vm->stack, 1);
@@ -239,10 +241,10 @@ static void do_mod(AkwVM *vm, AkwChunk *chunk, uint8_t *ip, AkwValue *slots)
   double num = fmod(akw_as_number(val1), akw_as_number(val2));
   akw_stack_set(&vm->stack, 1, akw_number_value(num));
   akw_stack_pop(&vm->stack);
-  dispatch(vm, chunk, ip, slots);
+  dispatch(vm, fn, ip, slots);
 }
 
-static void do_neg(AkwVM *vm, AkwChunk *chunk, uint8_t *ip, AkwValue *slots)
+static void do_neg(AkwVM *vm, AkwFunction *fn, uint8_t *ip, AkwValue *slots)
 {
   ++ip;
   AkwValue val = akw_stack_get(&vm->stack, 0);
@@ -254,21 +256,32 @@ static void do_neg(AkwVM *vm, AkwChunk *chunk, uint8_t *ip, AkwValue *slots)
   }
   double num = - akw_as_number(val);
   akw_stack_set(&vm->stack, 0, akw_number_value(num));
-  dispatch(vm, chunk, ip, slots);
+  dispatch(vm, fn, ip, slots);
 }
 
-static void do_return(AkwVM *vm, AkwChunk *chunk, uint8_t *ip, AkwValue *slots)
+static void do_call(AkwVM *vm, AkwFunction *fn, uint8_t *ip, AkwValue *slots)
 {
+  // TODO: Implement this function.
   (void) vm;
-  (void) chunk;
+  (void) fn;
   (void) ip;
   (void) slots;
 }
 
-void akw_vm_init(AkwVM *vm, int stackSize)
+static void do_return(AkwVM *vm, AkwFunction *fn, uint8_t *ip, AkwValue *slots)
+{
+  // TODO: Implement this function.
+  (void) vm;
+  (void) fn;
+  (void) ip;
+  (void) slots;
+}
+
+void akw_vm_init(AkwVM *vm, int stackSize, int cstackSize)
 {
   vm->rc = AKW_OK;
   akw_stack_init(&vm->stack, stackSize);
+  akw_stack_init(&vm->callstack, cstackSize);
 }
 
 void akw_vm_deinit(AkwVM *vm)
@@ -280,13 +293,14 @@ void akw_vm_deinit(AkwVM *vm)
     akw_value_release(val);
   }
   akw_stack_deinit(&vm->stack);
+  akw_stack_deinit(&vm->callstack);
 }
 
-void akw_vm_run(AkwVM *vm, AkwChunk *chunk)
+void akw_vm_run(AkwVM *vm, AkwFunction *fn)
 {
-  uint8_t *ip = chunk->code.bytes;
+  uint8_t *ip = fn->chunk.code.bytes;
   AkwValue *slots = vm->stack.elements;
-  dispatch(vm, chunk, ip, slots);
+  dispatch(vm, fn, ip, slots);
 }
 
 void akw_vm_push(AkwVM *vm, AkwValue val)

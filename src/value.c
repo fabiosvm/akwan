@@ -12,6 +12,7 @@
 #include <stdio.h>
 #include "akwan/range.h"
 #include "akwan/string.h"
+#include "akwan/function.h"
 
 const char *akw_value_type_name(AkwValue val)
 {
@@ -32,6 +33,9 @@ const char *akw_value_type_name(AkwValue val)
   case AKW_TYPE_RANGE:
     name = "Range";
     break;
+  case AKW_TYPE_FUNCTION:
+    name = "Function";
+    break;
   }
   return name;
 }
@@ -50,6 +54,9 @@ void akw_value_free(AkwValue val)
   case AKW_TYPE_RANGE:
     akw_range_free(akw_as_range(val));
     break;
+  case AKW_TYPE_FUNCTION:
+    akw_function_free(akw_as_function(val));
+    break;
   }
 }
 
@@ -66,6 +73,9 @@ void akw_value_release(AkwValue val)
     break;
   case AKW_TYPE_RANGE:
     akw_range_release(akw_as_range(val));
+    break;
+  case AKW_TYPE_FUNCTION:
+    akw_function_release(akw_as_function(val));
     break;
   }
 }
@@ -88,6 +98,9 @@ void akw_value_print(AkwValue val)
     break;
   case AKW_TYPE_RANGE:
     akw_range_print(akw_as_range(val));
+    break;
+  case AKW_TYPE_FUNCTION:
+    printf("<function %p>", val.asPointer);
     break;
   }
 }
