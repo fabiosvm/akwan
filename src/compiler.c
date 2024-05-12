@@ -62,6 +62,7 @@ static inline void unexpected_token_error(AkwCompiler *comp);
 static inline void compile_chunk(AkwCompiler *comp);
 static inline void compile_stmt(AkwCompiler *comp);
 static inline void compile_let_stmt(AkwCompiler *comp);
+static inline void compile_assign_stmt(AkwCompiler *comp);
 static inline void compile_return_stmt(AkwCompiler *comp);
 static inline void compile_expr(AkwCompiler *comp);
 static inline void compile_add_expr(AkwCompiler *comp);
@@ -155,6 +156,11 @@ static inline void compile_stmt(AkwCompiler *comp)
     compile_let_stmt(comp);
     return;
   }
+  if (match(comp, AKW_TOKEN_KIND_NAME))
+  {
+    compile_assign_stmt(comp);
+    return;
+  }
   if (match(comp, AKW_TOKEN_KIND_RETURN_KW))
   {
     compile_return_stmt(comp);
@@ -176,11 +182,30 @@ static inline void compile_let_stmt(AkwCompiler *comp)
   }
   AkwToken token = comp->lex.token;
   next(comp);
+  if (match(comp, AKW_TOKEN_KIND_EQ))
+  {
+    next(comp);
+    compile_expr(comp);
+    if (!akw_compiler_is_ok(comp)) return;
+  }
+  else
+    emit_opcode(comp, AKW_OP_NIL);
+  consume(comp, AKW_TOKEN_KIND_SEMICOLON);
+  define_symbol(comp, &token);
+}
+
+static inline void compile_assign_stmt(AkwCompiler *comp)
+{
+  AkwToken token = comp->lex.token;
+  next(comp);
   consume(comp, AKW_TOKEN_KIND_EQ);
   compile_expr(comp);
   if (!akw_compiler_is_ok(comp)) return;
   consume(comp, AKW_TOKEN_KIND_SEMICOLON);
-  define_symbol(comp, &token);
+  uint8_t index = find_symbol(comp, &token);
+  if (!akw_compiler_is_ok(comp)) return;
+  emit_opcode(comp, AKW_OP_STORE);
+  emit_byte(comp, index);
 }
 
 static inline void compile_return_stmt(AkwCompiler *comp)

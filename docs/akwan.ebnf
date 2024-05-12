@@ -1,7 +1,8 @@
 
 chunk         ::= stmt* EOF
 
-stmt          ::= "let" NAME "=" expr ";"
+stmt          ::= "let" NAME ( "=" expr )? ";"
+                | NAME "=" expr ";"
                 | "return" expr? ";"
                 | expr ";"
 
