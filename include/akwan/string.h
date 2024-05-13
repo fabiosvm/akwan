@@ -13,7 +13,12 @@
 
 #include "value.h"
 
-#define akw_string_is_empty(s) (!(s)->count)
+#define akw_string_is_empty(s) (!(s)->length)
+
+#define akw_string_clear(s) \
+  do { \
+    (s)->length = 0; \
+  } while (0)
 
 typedef struct
 {
