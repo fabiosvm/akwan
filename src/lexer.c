@@ -141,7 +141,7 @@ static inline bool match_string(AkwLexer *lex, int *rc, AkwError err)
     if (char_at(lex, n) == '\0')
     {
       *rc = AKW_LEXICAL_ERROR;
-      akw_error_set(err, "unterminated string");
+      akw_error_set(err, "unterminated string in %d,%d", lex->ln, lex->col);
       return false;
     }
     ++n;
@@ -277,5 +277,6 @@ void akw_lexer_next(AkwLexer *lex, int *rc, AkwError err)
   char c = current_char(lex);
   c = isprint(c) ? c : '?';
   *rc = AKW_LEXICAL_ERROR;
-  akw_error_set(err, "unexpected character '%c'", c);
+  akw_error_set(err, "unexpected character '%c' in %d,%d", c, lex->ln,
+    lex->col);
 }

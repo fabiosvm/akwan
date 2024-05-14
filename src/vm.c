@@ -109,8 +109,8 @@ static void do_range(AkwVM *vm, AkwChunk *chunk, uint8_t *ip, AkwValue *slots)
   if (!akw_is_int(val1) || !akw_is_int(val2))
   {
     vm->rc = AKW_TYPE_ERROR;
-    akw_error_set(vm->err, "cannot create a range with %s and %s", akw_value_type_name(val1),
-      akw_value_type_name(val2));
+    akw_error_set(vm->err, "cannot create a range with %s and %s",
+      akw_value_type_name(val1), akw_value_type_name(val2));
     return;
   }
   int64_t start = akw_as_int(val1);
@@ -232,8 +232,8 @@ static void do_mod(AkwVM *vm, AkwChunk *chunk, uint8_t *ip, AkwValue *slots)
   if (!akw_is_number(val1) || !akw_is_number(val2))
   {
     vm->rc = AKW_TYPE_ERROR;
-    akw_error_set(vm->err, "cannot calculate the modulus of %s by %s", akw_value_type_name(val1),
-      akw_value_type_name(val2));
+    akw_error_set(vm->err, "cannot calculate the modulus of %s by %s",
+      akw_value_type_name(val1), akw_value_type_name(val2));
     return;
   }
   double num = fmod(akw_as_number(val1), akw_as_number(val2));

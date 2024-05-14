@@ -10,8 +10,8 @@
 
 #include "akwan/value.h"
 #include <stdio.h>
-#include "akwan/string.h"
 #include "akwan/range.h"
+#include "akwan/string.h"
 
 const char *akw_value_type_name(AkwValue val)
 {

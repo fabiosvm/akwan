@@ -89,15 +89,16 @@ static inline void define_symbol(AkwCompiler *comp, AkwToken *name)
     if (token_equal(name, &symb->name))
     {
       comp->rc = AKW_SEMANTIC_ERROR;
-      akw_error_set(comp->err, "symbol '%.*s' already defined", name->length,
-        name->chars);
+      akw_error_set(comp->err, "symbol '%.*s' already defined in %d,%d",
+        name->length, name->chars, name->ln, name->col);
       return;
     }
   }
   if (n > UINT8_MAX)
   {
     comp->rc = AKW_SEMANTIC_ERROR;
-    akw_error_set(comp->err, "too many symbols defined");
+    akw_error_set(comp->err, "too many symbols defined in %d,%d",
+      name->ln, name->col);
     return;
   }
   AkwSymbol symb = {
@@ -120,8 +121,8 @@ static inline uint8_t find_symbol(AkwCompiler *comp, AkwToken *name)
       return symb->index;
   }
   comp->rc = AKW_SEMANTIC_ERROR;
-  akw_error_set(comp->err, "symbol '%.*s' referenced but not defined",
-    name->length, name->chars);
+  akw_error_set(comp->err, "symbol '%.*s' referenced but not defined in %d,%d",
+    name->length, name->chars, name->ln, name->col);
   return 0;
 }
 
@@ -131,11 +132,12 @@ static inline void unexpected_token_error(AkwCompiler *comp)
   AkwToken *token = &comp->lex.token;
   if (token->kind == AKW_TOKEN_KIND_EOF)
   {
-    akw_error_set(comp->err, "unexpected end of file");
+    akw_error_set(comp->err, "unexpected end of file in %d,%d",
+      token->ln, token->col);
     return;
   }
-  akw_error_set(comp->err, "unexpected token '%.*s'", token->length,
-    token->chars);
+  akw_error_set(comp->err, "unexpected token '%.*s' in %d,%d",
+    token->length, token->chars, token->ln, token->col);
 }
 
 static inline void compile_chunk(AkwCompiler *comp)
