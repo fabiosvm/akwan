@@ -83,7 +83,7 @@ int main(void)
 
   // Print result
   AkwValue result = akw_vm_peek(&vm);
-  akw_value_print(result);
+  akw_value_print(result, false);
   akw_vm_pop(&vm);
   printf("\n");
 

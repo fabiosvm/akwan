@@ -29,6 +29,9 @@ const char *akw_opcode_name(AkwOpcode op)
   case AKW_OP_RANGE:
     name = "Range";
     break;
+  case AKW_OP_ARRAY:
+    name = "Array";
+    break;
   case AKW_OP_LOAD:
     name = "Load";
     break;
@@ -37,6 +40,9 @@ const char *akw_opcode_name(AkwOpcode op)
     break;
   case AKW_OP_POP:
     name = "Pop";
+    break;
+  case AKW_OP_INDEX:
+    name = "Index";
     break;
   case AKW_OP_ADD:
     name = "Add";
