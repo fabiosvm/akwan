@@ -71,6 +71,7 @@ static inline void compile_unary_expr(AkwCompiler *comp);
 static inline void compile_prim_expr(AkwCompiler *comp);
 static inline void compile_number(AkwCompiler *comp);
 static inline void compile_string(AkwCompiler *comp);
+static inline void compile_array(AkwCompiler *comp);
 static inline void compile_symbol(AkwCompiler *comp);
 
 static inline bool token_equal(AkwToken *token1, AkwToken *token2)
@@ -330,7 +331,7 @@ static inline void compile_prim_expr(AkwCompiler *comp)
     emit_opcode(comp, AKW_OP_TRUE);
     return;
   }
-    if (match(comp, AKW_TOKEN_KIND_INT)
+  if (match(comp, AKW_TOKEN_KIND_INT)
    || match(comp, AKW_TOKEN_KIND_NUMBER))
   {
     compile_number(comp);
@@ -339,6 +340,11 @@ static inline void compile_prim_expr(AkwCompiler *comp)
   if (match(comp, AKW_TOKEN_KIND_STRING))
   {
     compile_string(comp);
+    return;
+  }
+  if (match(comp, AKW_TOKEN_KIND_LBRACKET))
+  {
+    compile_array(comp);
     return;
   }
   if (match(comp, AKW_TOKEN_KIND_NAME))
@@ -384,6 +390,31 @@ static inline void compile_string(AkwCompiler *comp)
   emit_byte(comp, index);
 }
 
+static inline void compile_array(AkwCompiler *comp)
+{
+  next(comp);
+  if (match(comp, AKW_TOKEN_KIND_RBRACKET))
+  {
+    next(comp);
+    emit_opcode(comp, AKW_OP_ARRAY);
+    emit_byte(comp, 0);
+    return;
+  }
+  compile_expr(comp);
+  if (!akw_compiler_is_ok(comp)) return;
+  uint8_t n = 1;
+  while (match(comp, AKW_TOKEN_KIND_COMMA))
+  {
+    next(comp);
+    compile_expr(comp);
+    if (!akw_compiler_is_ok(comp)) return;
+    ++n;
+  }
+  consume(comp, AKW_TOKEN_KIND_RBRACKET);
+  emit_opcode(comp, AKW_OP_ARRAY);
+  emit_byte(comp, n);
+}
+
 static inline void compile_symbol(AkwCompiler *comp)
 {
   AkwToken token = comp->lex.token;
@@ -392,6 +423,14 @@ static inline void compile_symbol(AkwCompiler *comp)
   if (!akw_compiler_is_ok(comp)) return;
   emit_opcode(comp, AKW_OP_LOAD);
   emit_byte(comp, index);
+  while (match(comp, AKW_TOKEN_KIND_LBRACKET))
+  {
+    next(comp);
+    compile_expr(comp);
+    if (!akw_compiler_is_ok(comp)) return;
+    consume(comp, AKW_TOKEN_KIND_RBRACKET);
+    emit_opcode(comp, AKW_OP_INDEX);
+  }
 }
 
 void akw_compiler_init(AkwCompiler *comp, int flags, char *source)

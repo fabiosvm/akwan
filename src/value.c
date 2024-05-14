@@ -10,6 +10,7 @@
 
 #include "akwan/value.h"
 #include <stdio.h>
+#include "akwan/array.h"
 #include "akwan/range.h"
 #include "akwan/string.h"
 
@@ -32,6 +33,9 @@ const char *akw_value_type_name(AkwValue val)
   case AKW_TYPE_RANGE:
     name = "Range";
     break;
+  case AKW_TYPE_ARRAY:
+    name = "Array";
+    break;
   }
   return name;
 }
@@ -50,6 +54,9 @@ void akw_value_free(AkwValue val)
   case AKW_TYPE_RANGE:
     akw_range_free(akw_as_range(val));
     break;
+  case AKW_TYPE_ARRAY:
+    akw_array_free(akw_as_array(val));
+    break;
   }
 }
 
@@ -67,10 +74,13 @@ void akw_value_release(AkwValue val)
   case AKW_TYPE_RANGE:
     akw_range_release(akw_as_range(val));
     break;
+  case AKW_TYPE_ARRAY:
+    akw_array_release(akw_as_array(val));
+    break;
   }
 }
 
-void akw_value_print(AkwValue val)
+void akw_value_print(AkwValue val, bool quoted)
 {
   switch (akw_type(val))
   {
@@ -84,10 +94,13 @@ void akw_value_print(AkwValue val)
     printf("%g", akw_as_number(val));
     break;
   case AKW_TYPE_STRING:
-    akw_string_print(akw_as_string(val), false);
+    akw_string_print(akw_as_string(val), quoted);
     break;
   case AKW_TYPE_RANGE:
     akw_range_print(akw_as_range(val));
+    break;
+  case AKW_TYPE_ARRAY:
+    akw_array_print(akw_as_array(val));
     break;
   }
 }

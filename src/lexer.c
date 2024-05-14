@@ -182,6 +182,9 @@ const char *akw_token_kind_name(AkwTokenKind kind)
   {
   case AKW_TOKEN_KIND_EOF:
     break;
+  case AKW_TOKEN_KIND_COMMA:
+    name = "Comma";
+    break;
   case AKW_TOKEN_KIND_SEMICOLON:
     name = "Semicolon";
     break;
@@ -190,6 +193,12 @@ const char *akw_token_kind_name(AkwTokenKind kind)
     break;
   case AKW_TOKEN_KIND_RPAREN:
     name = "RParen";
+    break;
+  case AKW_TOKEN_KIND_LBRACKET:
+    name = "LBracket";
+    break;
+  case AKW_TOKEN_KIND_RBRACKET:
+    name = "RBracket";
     break;
   case AKW_TOKEN_KIND_EQ:
     name = "Eq";
@@ -256,9 +265,12 @@ void akw_lexer_next(AkwLexer *lex, int *rc, AkwError err)
 {
   skip_space(lex);
   if (match_char(lex, 0, AKW_TOKEN_KIND_EOF)) return;
+  if (match_char(lex, ',', AKW_TOKEN_KIND_COMMA)) return;
   if (match_char(lex, ';', AKW_TOKEN_KIND_SEMICOLON)) return;
   if (match_char(lex, '(', AKW_TOKEN_KIND_LPAREN)) return;
   if (match_char(lex, ')', AKW_TOKEN_KIND_RPAREN)) return;
+  if (match_char(lex, '[', AKW_TOKEN_KIND_LBRACKET)) return;
+  if (match_char(lex, ']', AKW_TOKEN_KIND_RBRACKET)) return;
   if (match_char(lex, '=', AKW_TOKEN_KIND_EQ)) return;
   if (match_char(lex, '+', AKW_TOKEN_KIND_PLUS)) return;
   if (match_char(lex, '-', AKW_TOKEN_KIND_MINUS)) return;

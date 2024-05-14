@@ -12,8 +12,10 @@ Following is the instruction set:
 | `True`   |         | Push a `true` value onto the stack   |
 | `Const`  | _index_ | Push a constant value onto the stack |
 | `Range`  |         | Create a range from two integers     |
+| `Array`  | _n_     | Create an array of size _n_          |
 | `Load`   | _index_ | Load a value from the stack          |
 | `Store`  | _index_ | Store a value onto the stack         |
+| `Index`  |         | Index an array                       |
 | `Pop`    |         | Discard the top value from the stack |
 | `Add`    |         | Add two values                       |
 | `Sub`    |         | Subtract two values                  |

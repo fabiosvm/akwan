@@ -20,6 +20,7 @@ if(NOT MSVC)
 endif()
 
 add_executable(${PROJECT_NAME}
+  "src/array.c"
   "src/buffer.c"
   "src/chunk.c"
   "src/compiler.c"

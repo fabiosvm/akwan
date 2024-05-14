@@ -11,6 +11,7 @@
 #ifndef AKWAN_H
 #define AKWAN_H
 
+#include "akwan/array.h"
 #include "akwan/buffer.h"
 #include "akwan/chunk.h"
 #include "akwan/common.h"
