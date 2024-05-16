@@ -8,6 +8,30 @@
 // located in the root directory of this project.
 //
 
+/*
+chunk         ::= stmt* EOF
+
+stmt          ::= "let" NAME ( "=" expr )? ";"
+                | NAME subscr* "=" expr ";"
+                | "return" expr? ";"
+                | expr ";"
+
+subscr        ::= "[" expr "]"
+
+expr          ::= add_expr ( ".." add_expr )?
+
+add_expr      ::= mul_expr ( ( "+" | "-" ) mul_expr )*
+
+mul_expr      ::= unary_expr ( ( "*" | "/" | "%" ) unary_expr )*
+
+unary_expr    ::= "-" unary_expr | prim_expr
+
+prim_expr     ::= "nil" | "false" | "true" | INT | NUMBER | STRING
+                | "[" ( expr ( "," expr )* )? "]"
+                | NAME subscr*
+                | "(" expr ")"
+*/
+
 #include "akwan/compiler.h"
 #include <assert.h>
 #include <stdlib.h>
@@ -180,6 +204,14 @@ static inline void compile_chunk(AkwCompiler *comp)
   emit_opcode(comp, AKW_OP_RETURN);
 }
 
+/*
+stmt          ::= "let" NAME ( "=" expr )? ";"
+                | NAME subscr* "=" expr ";"
+                | "return" expr? ";"
+                | expr ";"
+
+subscr        ::= "[" expr "]"
+*/
 static inline void compile_stmt(AkwCompiler *comp)
 {
   if (match(comp, AKW_TOKEN_KIND_LET_KW))
@@ -230,6 +262,10 @@ static inline void compile_let_stmt(AkwCompiler *comp)
   define_symbol(comp, &token);
 }
 
+/*
+NAME subscr* "=" expr ";"
+subscr        ::= "[" expr "]"
+*/
 static inline void compile_assign_stmt(AkwCompiler *comp)
 {
   AkwToken token = comp->lex.token;
@@ -357,6 +393,12 @@ static inline void compile_unary_expr(AkwCompiler *comp)
   compile_prim_expr(comp);
 }
 
+/*
+prim_expr     ::= "nil" | "false" | "true" | INT | NUMBER | STRING
+                | "[" ( expr ( "," expr )* )? "]"
+                | NAME subscr*
+                | "(" expr ")"
+*/
 static inline void compile_prim_expr(AkwCompiler *comp)
 {
   if (match(comp, AKW_TOKEN_KIND_NIL_KW))

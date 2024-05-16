@@ -2,10 +2,12 @@
 chunk         ::= stmt* EOF
 
 stmt          ::= "let" NAME ( "=" expr )? ";"
-                | NAME "=" expr ";"
+                | NAME subscr* "=" expr ";"
                 | "return" expr? ";"
                 | "{" stmt* "}"
                 | expr ";"
+
+subscr        ::= "[" expr "]"
 
 expr          ::= add_expr ( ".." add_expr )?
 
@@ -17,5 +19,5 @@ unary_expr    ::= "-" unary_expr | prim_expr
 
 prim_expr     ::= "nil" | "false" | "true" | INT | NUMBER | STRING
                 | "[" ( expr ( "," expr )* )? "]"
-                | NAME ( "[" expr "]" )*
+                | NAME subscr*
                 | "(" expr ")"

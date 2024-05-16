@@ -30,6 +30,7 @@ void akw_dump_chunk(const AkwChunk *chunk)
     case AKW_OP_RANGE:
     case AKW_OP_POP:
     case AKW_OP_GET_ELEMENT:
+    case AKW_OP_SET_ELEMENT:
     case AKW_OP_ADD:
     case AKW_OP_SUB:
     case AKW_OP_MUL:

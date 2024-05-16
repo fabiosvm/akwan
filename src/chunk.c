@@ -47,6 +47,9 @@ const char *akw_opcode_name(AkwOpcode op)
   case AKW_OP_GET_ELEMENT:
     name = "GetElement";
     break;
+  case AKW_OP_SET_ELEMENT:
+    name = "SetElement";
+    break;
   case AKW_OP_ADD:
     name = "Add";
     break;
