@@ -32,17 +32,17 @@ const char *akw_opcode_name(AkwOpcode op)
   case AKW_OP_ARRAY:
     name = "Array";
     break;
-  case AKW_OP_LOAD:
-    name = "Load";
-    break;
-  case AKW_OP_STORE:
-    name = "Store";
-    break;
   case AKW_OP_POP:
     name = "Pop";
     break;
-  case AKW_OP_INDEX:
-    name = "Index";
+  case AKW_OP_GET_LOCAL:
+    name = "GetLocal";
+    break;
+  case AKW_OP_SET_LOCAL:
+    name = "SetLocal";
+    break;
+  case AKW_OP_GET_ELEMENT:
+    name = "GetElement";
     break;
   case AKW_OP_ADD:
     name = "Add";

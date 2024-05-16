@@ -207,7 +207,7 @@ static inline void compile_assign_stmt(AkwCompiler *comp)
   consume(comp, AKW_TOKEN_KIND_SEMICOLON);
   uint8_t index = find_symbol(comp, &token);
   if (!akw_compiler_is_ok(comp)) return;
-  emit_opcode(comp, AKW_OP_STORE);
+  emit_opcode(comp, AKW_OP_SET_LOCAL);
   emit_byte(comp, index);
 }
 
@@ -421,7 +421,7 @@ static inline void compile_symbol(AkwCompiler *comp)
   next(comp);
   uint8_t index = find_symbol(comp, &token);
   if (!akw_compiler_is_ok(comp)) return;
-  emit_opcode(comp, AKW_OP_LOAD);
+  emit_opcode(comp, AKW_OP_GET_LOCAL);
   emit_byte(comp, index);
   while (match(comp, AKW_TOKEN_KIND_LBRACKET))
   {
@@ -429,7 +429,7 @@ static inline void compile_symbol(AkwCompiler *comp)
     compile_expr(comp);
     if (!akw_compiler_is_ok(comp)) return;
     consume(comp, AKW_TOKEN_KIND_RBRACKET);
-    emit_opcode(comp, AKW_OP_INDEX);
+    emit_opcode(comp, AKW_OP_GET_ELEMENT);
   }
 }
 
