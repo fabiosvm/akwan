@@ -21,6 +21,7 @@
 typedef struct
 {
   AkwToken name;
+  int      depth;
   uint8_t  index;
 } AkwSymbol;
 
@@ -30,6 +31,7 @@ typedef struct
   int                  rc;
   AkwError             err;
   AkwLexer             lex;
+  int                  scopeDepth;
   AkwVector(AkwSymbol) symbols;
   AkwChunk             chunk;
 } AkwCompiler;

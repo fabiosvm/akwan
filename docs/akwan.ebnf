@@ -4,6 +4,7 @@ chunk         ::= stmt* EOF
 stmt          ::= "let" NAME ( "=" expr )? ";"
                 | NAME "=" expr ";"
                 | "return" expr? ";"
+                | "{" stmt* "}"
                 | expr ";"
 
 expr          ::= add_expr ( ".." add_expr )?

@@ -200,6 +200,12 @@ const char *akw_token_kind_name(AkwTokenKind kind)
   case AKW_TOKEN_KIND_RBRACKET:
     name = "RBracket";
     break;
+  case AKW_TOKEN_KIND_LBRACE:
+    name = "LBrace";
+    break;
+  case AKW_TOKEN_KIND_RBRACE:
+    name = "RBrace";
+    break;
   case AKW_TOKEN_KIND_EQ:
     name = "Eq";
     break;
@@ -271,6 +277,8 @@ void akw_lexer_next(AkwLexer *lex, int *rc, AkwError err)
   if (match_char(lex, ')', AKW_TOKEN_KIND_RPAREN)) return;
   if (match_char(lex, '[', AKW_TOKEN_KIND_LBRACKET)) return;
   if (match_char(lex, ']', AKW_TOKEN_KIND_RBRACKET)) return;
+  if (match_char(lex, '{', AKW_TOKEN_KIND_LBRACE)) return;
+  if (match_char(lex, '}', AKW_TOKEN_KIND_RBRACE)) return;
   if (match_char(lex, '=', AKW_TOKEN_KIND_EQ)) return;
   if (match_char(lex, '+', AKW_TOKEN_KIND_PLUS)) return;
   if (match_char(lex, '-', AKW_TOKEN_KIND_MINUS)) return;

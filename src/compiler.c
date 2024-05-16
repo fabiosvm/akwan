@@ -55,15 +55,22 @@
     check_code(c); \
   } while (0)
 
+#define push_scope(c) \
+  do { \
+    ++(c)->scopeDepth; \
+  } while (0)
+
 static inline bool token_equal(AkwToken *token1, AkwToken *token2);
 static inline void define_symbol(AkwCompiler *comp, AkwToken *name);
 static inline uint8_t find_symbol(AkwCompiler *comp, AkwToken *name);
+static inline void pop_scope(AkwCompiler *comp);
 static inline void unexpected_token_error(AkwCompiler *comp);
 static inline void compile_chunk(AkwCompiler *comp);
 static inline void compile_stmt(AkwCompiler *comp);
 static inline void compile_let_stmt(AkwCompiler *comp);
 static inline void compile_assign_stmt(AkwCompiler *comp);
 static inline void compile_return_stmt(AkwCompiler *comp);
+static inline void compile_block_stmt(AkwCompiler *comp);
 static inline void compile_expr(AkwCompiler *comp);
 static inline void compile_add_expr(AkwCompiler *comp);
 static inline void compile_mul_expr(AkwCompiler *comp);
@@ -87,6 +94,7 @@ static inline void define_symbol(AkwCompiler *comp, AkwToken *name)
   for (int i = n - 1; i > -1; --i)
   {
     AkwSymbol *symb = &symbols[i];
+    if (symb->depth < comp->scopeDepth) break;
     if (token_equal(name, &symb->name))
     {
       comp->rc = AKW_SEMANTIC_ERROR;
@@ -104,6 +112,7 @@ static inline void define_symbol(AkwCompiler *comp, AkwToken *name)
   }
   AkwSymbol symb = {
     .name = *name,
+    .depth = comp->scopeDepth,
     .index = (uint8_t) n
   };
   int rc = AKW_OK;
@@ -115,9 +124,12 @@ static inline uint8_t find_symbol(AkwCompiler *comp, AkwToken *name)
 {
   int n = comp->symbols.count;
   AkwSymbol *symbols = comp->symbols.elements;
+  int scopeDepth = comp->scopeDepth;
   for (int i = n - 1; i > -1; --i)
   {
     AkwSymbol *symb = &symbols[i];
+    if (symb->depth > scopeDepth) continue;
+    if (symb->depth < scopeDepth) break;
     if (token_equal(name, &symb->name))
       return symb->index;
   }
@@ -125,6 +137,16 @@ static inline uint8_t find_symbol(AkwCompiler *comp, AkwToken *name)
   akw_error_set(comp->err, "symbol '%.*s' referenced but not defined in %d,%d",
     name->length, name->chars, name->ln, name->col);
   return 0;
+}
+
+static inline void pop_scope(AkwCompiler *comp)
+{
+  int n = comp->symbols.count;
+  AkwSymbol *symbols = comp->symbols.elements;
+  int depth = comp->scopeDepth;
+  for (int i = n - 1; i > -1 && symbols[i].depth >= depth; --i)
+    emit_opcode(comp, AKW_OP_POP);
+  --comp->scopeDepth;
 }
 
 static inline void unexpected_token_error(AkwCompiler *comp)
@@ -167,6 +189,11 @@ static inline void compile_stmt(AkwCompiler *comp)
   if (match(comp, AKW_TOKEN_KIND_RETURN_KW))
   {
     compile_return_stmt(comp);
+    return;
+  }
+  if (match(comp, AKW_TOKEN_KIND_LBRACE))
+  {
+    compile_block_stmt(comp);
     return;
   }
   compile_expr(comp);
@@ -223,6 +250,19 @@ static inline void compile_return_stmt(AkwCompiler *comp)
   if (!akw_compiler_is_ok(comp)) return;
   consume(comp, AKW_TOKEN_KIND_SEMICOLON);
   emit_opcode(comp, AKW_OP_RETURN);
+}
+
+static inline void compile_block_stmt(AkwCompiler *comp)
+{
+  next(comp);
+  push_scope(comp);
+  while (!match(comp, AKW_TOKEN_KIND_RBRACE))
+  {
+    compile_stmt(comp);
+    if (!akw_compiler_is_ok(comp)) return;
+  }
+  next(comp);
+  pop_scope(comp);
 }
 
 static inline void compile_expr(AkwCompiler *comp)
@@ -439,6 +479,7 @@ void akw_compiler_init(AkwCompiler *comp, int flags, char *source)
   comp->rc = AKW_OK;
   akw_lexer_init(&comp->lex, source, &comp->rc, comp->err);
   if (!akw_compiler_is_ok(comp)) return;
+  comp->scopeDepth = 0;
   akw_vector_init(&comp->symbols);
   akw_chunk_init(&comp->chunk);
 }
