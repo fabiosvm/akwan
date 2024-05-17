@@ -18,11 +18,11 @@ typedef struct
 {
   AkwObject obj;
   int64_t   start;
-  int64_t   end;
+  int64_t   finish;
 } AkwRange;
 
-void akw_range_init(AkwRange *range, int64_t start, int64_t end);
-AkwRange *akw_range_new(int64_t start, int64_t end);
+void akw_range_init(AkwRange *range, int64_t start, int64_t finish);
+AkwRange *akw_range_new(int64_t start, int64_t finish);
 void akw_range_free(AkwRange *range);
 void akw_range_release(AkwRange *range);
 void akw_range_print(AkwRange *range);

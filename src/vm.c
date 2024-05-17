@@ -119,8 +119,8 @@ static void do_range(AkwVM *vm, AkwChunk *chunk, uint8_t *ip, AkwValue *slots)
     return;
   }
   int64_t start = akw_as_int(val1);
-  int64_t end = akw_as_int(val2);
-  AkwRange *range = akw_range_new(start, end);
+  int64_t finish = akw_as_int(val2);
+  AkwRange *range = akw_range_new(start, finish);
   akw_stack_set(&vm->stack, 1, akw_range_value(range));
   akw_object_retain(&range->obj);
   akw_stack_pop(&vm->stack);

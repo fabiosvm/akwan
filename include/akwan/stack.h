@@ -18,7 +18,7 @@
     int size; \
     T   *elements; \
     T   *top; \
-    T   *end; \
+    T   *bottom; \
   }
 
 #define akw_stack_init(stk, sz) \
@@ -28,7 +28,7 @@
     (stk)->size = (sz); \
     (stk)->elements = elements; \
     (stk)->top = &(stk)->elements[-1]; \
-    (stk)->end = &(stk)->elements[(sz) - 1]; \
+    (stk)->bottom = &(stk)->elements[(sz) - 1]; \
   } while (0)
 
 #define akw_stack_deinit(stk) \
@@ -38,7 +38,7 @@
 
 #define akw_stack_is_empty(stk) ((stk)->top < (stk)->elements)
 
-#define akw_stack_is_full(stk) ((stk)->top == (stk)->end)
+#define akw_stack_is_full(stk) ((stk)->top == (stk)->bottom)
 
 #define akw_stack_get(stk, i) ((stk)->top[-(i)])
 
