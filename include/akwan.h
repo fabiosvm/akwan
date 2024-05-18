@@ -20,6 +20,7 @@
 #include "akwan/error.h"
 #include "akwan/lexer.h"
 #include "akwan/memory.h"
+#include "akwan/native.h"
 #include "akwan/range.h"
 #include "akwan/stack.h"
 #include "akwan/string.h"

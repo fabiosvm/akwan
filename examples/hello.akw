@@ -1,2 +1,2 @@
 
-return "Hello, world!";
+println("Hello, world!");

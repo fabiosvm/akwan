@@ -19,7 +19,7 @@
 
 #define akw_vm_is_ok(vm) (akw_is_ok((vm)->rc))
 
-typedef struct
+typedef struct AkwVM
 {
   int                rc;
   AkwError           err;

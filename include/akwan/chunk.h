@@ -17,12 +17,13 @@
 
 typedef enum
 {
-  AKW_OP_NIL,         AKW_OP_FALSE,     AKW_OP_TRUE,
-  AKW_OP_CONST,       AKW_OP_RANGE,     AKW_OP_ARRAY,
-  AKW_OP_POP,         AKW_OP_GET_LOCAL, AKW_OP_SET_LOCAL,
-  AKW_OP_GET_ELEMENT, AKW_OP_ADD,       AKW_OP_SUB,
-  AKW_OP_MUL,         AKW_OP_DIV,       AKW_OP_MOD,
-  AKW_OP_NEG,         AKW_OP_RETURN
+  AKW_OP_NIL,       AKW_OP_FALSE,       AKW_OP_TRUE,
+  AKW_OP_CONST,     AKW_OP_RANGE,       AKW_OP_ARRAY,
+  AKW_OP_POP,       AKW_OP_GLOBAL,      AKW_OP_GET_LOCAL,
+  AKW_OP_SET_LOCAL, AKW_OP_GET_ELEMENT, AKW_OP_ADD,
+  AKW_OP_SUB,       AKW_OP_MUL,         AKW_OP_DIV,
+  AKW_OP_MOD,       AKW_OP_NEG,         AKW_OP_CALL,
+  AKW_OP_RETURN
 } AkwOpcode;
 
 typedef struct

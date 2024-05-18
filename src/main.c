@@ -35,32 +35,33 @@ static inline void print_error(char *err)
 int main(void)
 {
   // Read source code
-  AkwBuffer buf;
-  akw_buffer_init(&buf);
-  int rc = AKW_OK;
-  read_from_stdin(&buf, &rc);
-  if (!akw_is_ok(rc))
-  {
-    assert(rc == AKW_RANGE_ERROR);
-    print_error("source code too large");
-    akw_buffer_deinit(&buf);
-    return EXIT_FAILURE;
-  }
+  //AkwBuffer buf;
+  //akw_buffer_init(&buf);
+  //int rc = AKW_OK;
+  //read_from_stdin(&buf, &rc);
+  //if (!akw_is_ok(rc))
+  //{
+  //  assert(rc == AKW_RANGE_ERROR);
+  //  print_error("source code too large");
+  //  akw_buffer_deinit(&buf);
+  //  return EXIT_FAILURE;
+  //}
 
   // Compile
   AkwCompiler comp;
-  akw_compiler_init(&comp, 0, (char *) buf.bytes);
+  akw_compiler_init(&comp, 0, "println(1 + 2);");
+  //akw_compiler_init(&comp, 0, (char *) buf.bytes);
   if (!akw_compiler_is_ok(&comp))
   {
     print_error(comp.err);
-    akw_buffer_deinit(&buf);
+    //akw_buffer_deinit(&buf);
     return EXIT_FAILURE;
   }
   akw_compiler_compile(&comp);
   if (!akw_compiler_is_ok(&comp))
   {
     print_error(comp.err);
-    akw_buffer_deinit(&buf);
+    //akw_buffer_deinit(&buf);
     akw_compiler_deinit(&comp);
     return EXIT_FAILURE;
   }
@@ -75,7 +76,7 @@ int main(void)
   if (!akw_vm_is_ok(&vm))
   {
     print_error(vm.err);
-    akw_buffer_deinit(&buf);
+    //akw_buffer_deinit(&buf);
     akw_compiler_deinit(&comp);
     akw_vm_deinit(&vm);
     return EXIT_FAILURE;
@@ -88,7 +89,7 @@ int main(void)
   printf("\n");
 
   // Cleanup
-  akw_buffer_deinit(&buf);
+  //akw_buffer_deinit(&buf);
   akw_compiler_deinit(&comp);
   akw_vm_deinit(&vm);
   return EXIT_SUCCESS;

@@ -35,6 +35,9 @@ const char *akw_opcode_name(AkwOpcode op)
   case AKW_OP_POP:
     name = "Pop";
     break;
+  case AKW_OP_GLOBAL:
+    name = "Global";
+    break;
   case AKW_OP_GET_LOCAL:
     name = "GetLocal";
     break;
@@ -61,6 +64,9 @@ const char *akw_opcode_name(AkwOpcode op)
     break;
   case AKW_OP_NEG:
     name = "Neg";
+    break;
+  case AKW_OP_CALL:
+    name = "Call";
     break;
   case AKW_OP_RETURN:
     name = "Return";

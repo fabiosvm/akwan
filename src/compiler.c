@@ -8,6 +8,33 @@
 // located in the root directory of this project.
 //
 
+/*
+chunk         ::= stmt* EOF
+
+stmt          ::= "let" NAME ( "=" expr )? ";"
+                | NAME ( "=" expr | call* ) ";"
+                | "return" expr? ";"
+                | "{" stmt* "}"
+                | expr ";"
+
+call          ::= "(" ( expr ( "," expr )* )? ")"
+
+expr          ::= add_expr ( ".." add_expr )?
+
+add_expr      ::= mul_expr ( ( "+" | "-" ) mul_expr )*
+
+mul_expr      ::= unary_expr ( ( "*" | "/" | "%" ) unary_expr )*
+
+unary_expr    ::= "-" unary_expr | call_expr
+
+call_expr     ::= prim_expr call*
+
+prim_expr     ::= "nil" | "false" | "true" | INT | NUMBER | STRING
+                | "[" ( expr ( "," expr )* )? "]"
+                | NAME ( "[" expr "]" )*
+                | "(" expr ")"
+*/
+
 #include "akwan/compiler.h"
 #include <assert.h>
 #include <stdlib.h>
@@ -75,6 +102,7 @@ static inline void compile_expr(AkwCompiler *comp);
 static inline void compile_add_expr(AkwCompiler *comp);
 static inline void compile_mul_expr(AkwCompiler *comp);
 static inline void compile_unary_expr(AkwCompiler *comp);
+static inline void compile_call_expr(AkwCompiler *comp);
 static inline void compile_prim_expr(AkwCompiler *comp);
 static inline void compile_number(AkwCompiler *comp);
 static inline void compile_string(AkwCompiler *comp);
@@ -174,6 +202,15 @@ static inline void compile_chunk(AkwCompiler *comp)
   emit_opcode(comp, AKW_OP_RETURN);
 }
 
+/*
+stmt          ::= "let" NAME ( "=" expr )? ";"
+                | NAME ( "=" expr | call* ) ";"
+                | "return" expr? ";"
+                | "{" stmt* "}"
+                | expr ";"
+
+call          ::= "(" ( expr ( "," expr )* )? ")"
+*/
 static inline void compile_stmt(AkwCompiler *comp)
 {
   if (match(comp, AKW_TOKEN_KIND_LET_KW))
@@ -338,6 +375,9 @@ static inline void compile_mul_expr(AkwCompiler *comp)
   }
 }
 
+/*
+unary_expr    ::= "-" unary_expr | call_expr
+*/
 static inline void compile_unary_expr(AkwCompiler *comp)
 {
   if (match(comp, AKW_TOKEN_KIND_MINUS))
@@ -348,7 +388,42 @@ static inline void compile_unary_expr(AkwCompiler *comp)
     emit_opcode(comp, AKW_OP_NEG);
     return;
   }
+  compile_call_expr(comp);
+}
+
+/*
+call_expr     ::= prim_expr call*
+
+call          ::= "(" ( expr ( "," expr )* )? ")"
+*/
+static inline void compile_call_expr(AkwCompiler *comp)
+{
   compile_prim_expr(comp);
+  if (!akw_compiler_is_ok(comp)) return;
+  while (match(comp, AKW_TOKEN_KIND_LPAREN))
+  {
+    next(comp);
+    if (match(comp, AKW_TOKEN_KIND_RPAREN))
+    {
+      next(comp);
+      emit_opcode(comp, AKW_OP_CALL);
+      emit_byte(comp, 0);
+      continue;
+    }
+    compile_expr(comp);
+    if (!akw_compiler_is_ok(comp)) return;
+    uint8_t n = 1;
+    while (match(comp, AKW_TOKEN_KIND_COMMA))
+    {
+      next(comp);
+      compile_expr(comp);
+      if (!akw_compiler_is_ok(comp)) return;
+      ++n;
+    }
+    consume(comp, AKW_TOKEN_KIND_RPAREN);
+    emit_opcode(comp, AKW_OP_CALL);
+    emit_byte(comp, n);
+  }
 }
 
 static inline void compile_prim_expr(AkwCompiler *comp)

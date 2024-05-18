@@ -11,6 +11,7 @@
 #include "akwan/value.h"
 #include <stdio.h>
 #include "akwan/array.h"
+#include "akwan/native.h"
 #include "akwan/range.h"
 #include "akwan/string.h"
 
@@ -36,6 +37,9 @@ const char *akw_value_type_name(AkwValue val)
   case AKW_TYPE_ARRAY:
     name = "Array";
     break;
+  case AKW_TYPE_NATIVE:
+    name = "Native";
+    break;
   }
   return name;
 }
@@ -57,6 +61,9 @@ void akw_value_free(AkwValue val)
   case AKW_TYPE_ARRAY:
     akw_array_free(akw_as_array(val));
     break;
+  case AKW_TYPE_NATIVE:
+    akw_native_free(akw_as_native(val));
+    break;
   }
 }
 
@@ -76,6 +83,9 @@ void akw_value_release(AkwValue val)
     break;
   case AKW_TYPE_ARRAY:
     akw_array_release(akw_as_array(val));
+    break;
+  case AKW_TYPE_NATIVE:
+    akw_native_release(akw_as_native(val));
     break;
   }
 }
@@ -101,6 +111,9 @@ void akw_value_print(AkwValue val, bool quoted)
     break;
   case AKW_TYPE_ARRAY:
     akw_array_print(akw_as_array(val));
+    break;
+  case AKW_TYPE_NATIVE:
+    printf("<native %p>", val.asPointer);
     break;
   }
 }

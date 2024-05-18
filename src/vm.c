@@ -32,6 +32,7 @@ static void do_const(AkwVM *vm, AkwChunk *chunk, uint8_t *ip, AkwValue *slots);
 static void do_range(AkwVM *vm, AkwChunk *chunk, uint8_t *ip, AkwValue *slots);
 static void do_array(AkwVM *vm, AkwChunk *chunk, uint8_t *ip, AkwValue *slots);
 static void do_pop(AkwVM *vm, AkwChunk *chunk, uint8_t *ip, AkwValue *slots);
+static void do_global(AkwVM *vm, AkwChunk *chunk, uint8_t *ip, AkwValue *slots);
 static void do_get_local(AkwVM *vm, AkwChunk *chunk, uint8_t *ip, AkwValue *slots);
 static void do_set_local(AkwVM *vm, AkwChunk *chunk, uint8_t *ip, AkwValue *slots);
 static void do_get_element(AkwVM *vm, AkwChunk *chunk, uint8_t *ip, AkwValue *slots);
@@ -41,15 +42,17 @@ static void do_mul(AkwVM *vm, AkwChunk *chunk, uint8_t *ip, AkwValue *slots);
 static void do_div(AkwVM *vm, AkwChunk *chunk, uint8_t *ip, AkwValue *slots);
 static void do_mod(AkwVM *vm, AkwChunk *chunk, uint8_t *ip, AkwValue *slots);
 static void do_neg(AkwVM *vm, AkwChunk *chunk, uint8_t *ip, AkwValue *slots);
+static void do_call(AkwVM *vm, AkwChunk *chunk, uint8_t *ip, AkwValue *slots);
 static void do_return(AkwVM *vm, AkwChunk *chunk, uint8_t *ip, AkwValue *slots);
 
 static AkwInstructionHandleFn instructionHandles[] = {
-  [AKW_OP_NIL]         = do_nil,         [AKW_OP_FALSE]     = do_false,     [AKW_OP_TRUE]      = do_true,
-  [AKW_OP_CONST]       = do_const,       [AKW_OP_RANGE]     = do_range,     [AKW_OP_ARRAY]     = do_array,
-  [AKW_OP_POP]         = do_pop,         [AKW_OP_GET_LOCAL] = do_get_local, [AKW_OP_SET_LOCAL] = do_set_local,
-  [AKW_OP_GET_ELEMENT] = do_get_element, [AKW_OP_ADD]       = do_add,       [AKW_OP_SUB]       = do_sub,
-  [AKW_OP_MUL]         = do_mul,         [AKW_OP_DIV]       = do_div,       [AKW_OP_MOD]       = do_mod,
-  [AKW_OP_NEG]         = do_neg,         [AKW_OP_RETURN]    = do_return
+  [AKW_OP_NIL]       = do_nil,       [AKW_OP_FALSE]       = do_false,       [AKW_OP_TRUE]      = do_true,
+  [AKW_OP_CONST]     = do_const,     [AKW_OP_RANGE]       = do_range,       [AKW_OP_ARRAY]     = do_array,
+  [AKW_OP_POP]       = do_pop,       [AKW_OP_GLOBAL]      = do_global,      [AKW_OP_GET_LOCAL] = do_get_local,
+  [AKW_OP_SET_LOCAL] = do_set_local, [AKW_OP_GET_ELEMENT] = do_get_element, [AKW_OP_ADD]       = do_add,
+  [AKW_OP_SUB]       = do_sub,       [AKW_OP_MUL]         = do_mul,         [AKW_OP_DIV]       = do_div,
+  [AKW_OP_MOD]       = do_mod,       [AKW_OP_NEG]         = do_neg,         [AKW_OP_CALL]      = do_call,
+  [AKW_OP_RETURN]    = do_return
 };
 
 static inline void push(AkwVM *vm, AkwValue val)
@@ -155,6 +158,13 @@ static void do_pop(AkwVM *vm, AkwChunk *chunk, uint8_t *ip, AkwValue *slots)
   AkwValue val = akw_stack_get(&vm->stack, 0);
   akw_stack_pop(&vm->stack);
   akw_value_release(val);
+  dispatch(vm, chunk, ip, slots);
+}
+
+static void do_global(AkwVM *vm, AkwChunk *chunk, uint8_t *ip, AkwValue *slots)
+{
+  // TODO: Implement this function.
+  ++ip;
   dispatch(vm, chunk, ip, slots);
 }
 
@@ -309,6 +319,13 @@ static void do_neg(AkwVM *vm, AkwChunk *chunk, uint8_t *ip, AkwValue *slots)
   }
   double num = - akw_as_number(val);
   akw_stack_set(&vm->stack, 0, akw_number_value(num));
+  dispatch(vm, chunk, ip, slots);
+}
+
+static void do_call(AkwVM *vm, AkwChunk *chunk, uint8_t *ip, AkwValue *slots)
+{
+  // TODO: Implement this function.
+  ++ip;
   dispatch(vm, chunk, ip, slots);
 }
 

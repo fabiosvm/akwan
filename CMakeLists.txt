@@ -29,6 +29,7 @@ add_executable(${PROJECT_NAME}
   "src/lexer.c"
   "src/main.c"
   "src/memory.c"
+  "src/native.c"
   "src/range.c"
   "src/string.c"
   "src/value.c"

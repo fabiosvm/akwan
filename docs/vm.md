@@ -14,6 +14,7 @@ Following is the instruction set:
 | `Range`      |         | Create a range from two integers     |
 | `Array`      | _n_     | Create an array of size _n_          |
 | `Pop`        |         | Discard the top value from the stack |
+| `Global`     | _index_ | Get a global variable                |
 | `GetLocal`   | _index_ | Get a local variable                 |
 | `SetLocal`   | _index_ | Set a local variable                 |
 | `GetElement` |         | Get an element from an array         |
@@ -23,4 +24,5 @@ Following is the instruction set:
 | `Div`        |         | Divide two values                    |
 | `Mod`        |         | Modulo of two values                 |
 | `Neg`        |         | Negate a value                       |
+| `Call`       | _n_     | Call a function with `n` arguments   |
 | `Return`     |         | Return from the function             |
