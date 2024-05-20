@@ -10,6 +10,7 @@ Following is the instruction set:
 | `Nil`        |         | Push a `nil` value onto the stack    |
 | `False`      |         | Push a `false` value onto the stack  | 
 | `True`       |         | Push a `true` value onto the stack   |
+| `Int`        | _data_  | Push a 8-bit integer onto the stack  |
 | `Const`      | _index_ | Push a constant value onto the stack |
 | `Range`      |         | Create a range from two integers     |
 | `Array`      | _n_     | Create an array of size _n_          |

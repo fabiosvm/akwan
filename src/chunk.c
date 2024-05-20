@@ -23,6 +23,9 @@ const char *akw_opcode_name(AkwOpcode op)
   case AKW_OP_TRUE:
     name = "True";
     break;
+  case AKW_OP_INT:
+    name = "Int";
+    break;
   case AKW_OP_CONST:
     name = "Const";
     break;

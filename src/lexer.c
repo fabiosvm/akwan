@@ -101,6 +101,7 @@ static inline bool match_number(AkwLexer *lex)
   AkwTokenKind kind = AKW_TOKEN_KIND_INT;
   if (char_at(lex, length) == '.')
   {
+    kind = AKW_TOKEN_KIND_NUMBER;
     if (!isdigit(char_at(lex, length + 1)))
       goto end;
     length += 2;
@@ -120,7 +121,6 @@ static inline bool match_number(AkwLexer *lex)
   }
   if (isalnum(char_at(lex, length)) || char_at(lex, length) == '_')
     return false;
-  kind = AKW_TOKEN_KIND_NUMBER;
 end:
   lex->token = token(lex, kind, length, lex->curr);
   next_chars(lex, length);

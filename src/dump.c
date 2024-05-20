@@ -40,6 +40,7 @@ void akw_dump_chunk(const AkwChunk *chunk)
       printf("%-8s\n", akw_opcode_name(op));
       ++i;
       break;
+    case AKW_OP_INT:
     case AKW_OP_CONST:
     case AKW_OP_ARRAY:
     case AKW_OP_GET_LOCAL:
