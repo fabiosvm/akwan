@@ -24,7 +24,6 @@
 typedef void (*AkwInstructionHandleFn)(AkwVM *, AkwChunk *, uint8_t *, AkwValue *);
 
 static inline void push(AkwVM *vm, AkwValue val);
-static inline void set_slot(AkwValue *slots, uint8_t index, AkwValue val);
 static void do_nil(AkwVM *vm, AkwChunk *chunk, uint8_t *ip, AkwValue *slots);
 static void do_false(AkwVM *vm, AkwChunk *chunk, uint8_t *ip, AkwValue *slots);
 static void do_true(AkwVM *vm, AkwChunk *chunk, uint8_t *ip, AkwValue *slots);
@@ -32,9 +31,13 @@ static void do_int(AkwVM *vm, AkwChunk *chunk, uint8_t *ip, AkwValue *slots);
 static void do_const(AkwVM *vm, AkwChunk *chunk, uint8_t *ip, AkwValue *slots);
 static void do_range(AkwVM *vm, AkwChunk *chunk, uint8_t *ip, AkwValue *slots);
 static void do_array(AkwVM *vm, AkwChunk *chunk, uint8_t *ip, AkwValue *slots);
+static void do_local_ref(AkwVM *vm, AkwChunk *chunk, uint8_t *ip, AkwValue *slots);
+static void do_element_ref(AkwVM *vm, AkwChunk *chunk, uint8_t *ip, AkwValue *slots);
 static void do_pop(AkwVM *vm, AkwChunk *chunk, uint8_t *ip, AkwValue *slots);
 static void do_get_local(AkwVM *vm, AkwChunk *chunk, uint8_t *ip, AkwValue *slots);
 static void do_set_local(AkwVM *vm, AkwChunk *chunk, uint8_t *ip, AkwValue *slots);
+static void do_get_local_by_ref(AkwVM *vm, AkwChunk *chunk, uint8_t *ip, AkwValue *slots);
+static void do_set_local_by_ref(AkwVM *vm, AkwChunk *chunk, uint8_t *ip, AkwValue *slots);
 static void do_get_element(AkwVM *vm, AkwChunk *chunk, uint8_t *ip, AkwValue *slots);
 static void do_add(AkwVM *vm, AkwChunk *chunk, uint8_t *ip, AkwValue *slots);
 static void do_sub(AkwVM *vm, AkwChunk *chunk, uint8_t *ip, AkwValue *slots);
@@ -45,12 +48,17 @@ static void do_neg(AkwVM *vm, AkwChunk *chunk, uint8_t *ip, AkwValue *slots);
 static void do_return(AkwVM *vm, AkwChunk *chunk, uint8_t *ip, AkwValue *slots);
 
 static AkwInstructionHandleFn instructionHandles[] = {
-  [AKW_OP_NIL]       = do_nil,         [AKW_OP_FALSE]       = do_false,       [AKW_OP_TRUE]      = do_true,
-  [AKW_OP_INT]       = do_int,         [AKW_OP_CONST]       = do_const,       [AKW_OP_RANGE]     = do_range,
-  [AKW_OP_ARRAY]     = do_array,       [AKW_OP_POP]         = do_pop,         [AKW_OP_GET_LOCAL] = do_get_local,
-  [AKW_OP_SET_LOCAL] = do_set_local,   [AKW_OP_GET_ELEMENT] = do_get_element, [AKW_OP_ADD]       = do_add,
-  [AKW_OP_SUB]       = do_sub,         [AKW_OP_MUL]         = do_mul,         [AKW_OP_DIV]       = do_div,
-  [AKW_OP_MOD]       = do_mod,         [AKW_OP_NEG]         = do_neg,         [AKW_OP_RETURN]    = do_return
+  [AKW_OP_NIL]              = do_nil,              [AKW_OP_FALSE]            = do_false,
+  [AKW_OP_TRUE]             = do_true,             [AKW_OP_INT]              = do_int,
+  [AKW_OP_CONST]            = do_const,            [AKW_OP_RANGE]            = do_range,
+  [AKW_OP_ARRAY]            = do_array,            [AKW_OP_LOCAL_REF]        = do_local_ref,
+  [AKW_OP_ELEMENT_REF]      = do_element_ref,      [AKW_OP_POP]              = do_pop,
+  [AKW_OP_GET_LOCAL]        = do_get_local,        [AKW_OP_SET_LOCAL]        = do_set_local,
+  [AKW_OP_GET_LOCAL_BY_REF] = do_get_local_by_ref, [AKW_OP_SET_LOCAL_BY_REF] = do_set_local_by_ref,
+  [AKW_OP_GET_ELEMENT]      = do_get_element,      [AKW_OP_ADD]              = do_add,
+  [AKW_OP_SUB]              = do_sub,              [AKW_OP_MUL]              = do_mul,
+  [AKW_OP_DIV]              = do_div,              [AKW_OP_MOD]              = do_mod,
+  [AKW_OP_NEG]              = do_neg,              [AKW_OP_RETURN]           = do_return
 };
 
 static inline void push(AkwVM *vm, AkwValue val)
@@ -62,13 +70,6 @@ static inline void push(AkwVM *vm, AkwValue val)
     return;
   }
   akw_stack_push(&vm->stack, val);
-}
-
-static inline void set_slot(AkwValue *slots, uint8_t index, AkwValue val)
-{
-  akw_value_retain(val);
-  akw_value_release(slots[index]);
-  slots[index] = val;
 }
 
 static void do_nil(AkwVM *vm, AkwChunk *chunk, uint8_t *ip, AkwValue *slots)
@@ -159,6 +160,43 @@ static void do_array(AkwVM *vm, AkwChunk *chunk, uint8_t *ip, AkwValue *slots)
   dispatch(vm, chunk, ip, slots);
 }
 
+static void do_local_ref(AkwVM *vm, AkwChunk *chunk, uint8_t *ip, AkwValue *slots)
+{
+  uint8_t index = ip[1];
+  ip += 2;
+  AkwValue *ref = &slots[index];
+  push(vm, akw_ref_value(ref));
+  if (!akw_vm_is_ok(vm)) return;
+  dispatch(vm, chunk, ip, slots);
+}
+
+static void do_element_ref(AkwVM *vm, AkwChunk *chunk, uint8_t *ip, AkwValue *slots)
+{
+  ++ip;
+  AkwValue val1 = akw_stack_get(&vm->stack, 1);
+  AkwValue val2 = akw_stack_get(&vm->stack, 0);
+  if (!akw_is_array(val1) || !akw_is_int(val2))
+  {
+    vm->rc = AKW_TYPE_ERROR;
+    akw_error_set(vm->err, "cannot index %s with %s", akw_value_type_name(val1),
+      akw_value_type_name(val2));
+    return;
+  }
+  AkwArray *arr = akw_as_array(val1);
+  int64_t index = akw_as_int(val2);
+  if (index < 0 || index >= akw_array_count(arr))
+  {
+    vm->rc = AKW_RANGE_ERROR;
+    akw_error_set(vm->err, "index out of range");
+    return;
+  }
+  AkwValue *ref = &arr->vec.elements[index];
+  akw_stack_set(&vm->stack, 1, akw_ref_value(ref));
+  akw_array_release(arr);
+  akw_stack_pop(&vm->stack);
+  dispatch(vm, chunk, ip, slots);
+}
+
 static void do_pop(AkwVM *vm, AkwChunk *chunk, uint8_t *ip, AkwValue *slots)
 {
   ++ip;
@@ -184,7 +222,34 @@ static void do_set_local(AkwVM *vm, AkwChunk *chunk, uint8_t *ip, AkwValue *slot
   uint8_t index = ip[1];
   ip += 2;
   AkwValue val = akw_stack_get(&vm->stack, 0);
-  set_slot(slots, index, val);
+  akw_value_retain(val);
+  akw_value_release(slots[index]);
+  slots[index] = val;
+  akw_stack_pop(&vm->stack);
+  dispatch(vm, chunk, ip, slots);
+}
+
+static void do_get_local_by_ref(AkwVM *vm, AkwChunk *chunk, uint8_t *ip, AkwValue *slots)
+{
+  uint8_t index = ip[1];
+  ip += 2;
+  AkwValue *ref = akw_as_ref(slots[index]);
+  AkwValue val = *ref;
+  push(vm, val);
+  if (!akw_vm_is_ok(vm)) return;
+  akw_value_retain(val);
+  dispatch(vm, chunk, ip, slots);
+}
+
+static void do_set_local_by_ref(AkwVM *vm, AkwChunk *chunk, uint8_t *ip, AkwValue *slots)
+{
+  uint8_t index = ip[1];
+  ip += 2;
+  AkwValue *ref = akw_as_ref(slots[index]);
+  AkwValue val = akw_stack_get(&vm->stack, 0);
+  akw_value_retain(val);
+  akw_value_release(*ref);
+  *ref = val;
   akw_stack_pop(&vm->stack);
   dispatch(vm, chunk, ip, slots);
 }

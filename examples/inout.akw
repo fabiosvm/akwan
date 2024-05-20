@@ -1,0 +1,5 @@
+
+let x = 1;
+inout y = &x;
+y = 2;
+return x;

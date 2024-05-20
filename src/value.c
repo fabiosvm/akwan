@@ -36,6 +36,9 @@ const char *akw_value_type_name(AkwValue val)
   case AKW_TYPE_ARRAY:
     name = "Array";
     break;
+  case AKW_TYPE_REF:
+    name = "Ref";
+    break;
   }
   return name;
 }
@@ -47,6 +50,7 @@ void akw_value_free(AkwValue val)
   case AKW_TYPE_NIL:
   case AKW_TYPE_BOOL:
   case AKW_TYPE_NUMBER:
+  case AKW_TYPE_REF:
     break;
   case AKW_TYPE_STRING:
     akw_string_free(akw_as_string(val));
@@ -67,6 +71,7 @@ void akw_value_release(AkwValue val)
   case AKW_TYPE_NIL:
   case AKW_TYPE_BOOL:
   case AKW_TYPE_NUMBER:
+  case AKW_TYPE_REF:
     break;
   case AKW_TYPE_STRING:
     akw_string_release(akw_as_string(val));
@@ -101,6 +106,9 @@ void akw_value_print(AkwValue val, bool quoted)
     break;
   case AKW_TYPE_ARRAY:
     akw_array_print(akw_as_array(val));
+    break;
+  case AKW_TYPE_REF:
+    printf("<ref %p>", val.asPointer);
     break;
   }
 }

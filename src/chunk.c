@@ -35,6 +35,12 @@ const char *akw_opcode_name(AkwOpcode op)
   case AKW_OP_ARRAY:
     name = "Array";
     break;
+  case AKW_OP_LOCAL_REF:
+    name = "LocalRef";
+    break;
+  case AKW_OP_ELEMENT_REF:
+    name = "ElementRef";
+    break;
   case AKW_OP_POP:
     name = "Pop";
     break;
@@ -43,6 +49,12 @@ const char *akw_opcode_name(AkwOpcode op)
     break;
   case AKW_OP_SET_LOCAL:
     name = "SetLocal";
+    break;
+  case AKW_OP_GET_LOCAL_BY_REF:
+    name = "GetLocalByRef";
+    break;
+  case AKW_OP_SET_LOCAL_BY_REF:
+    name = "SetLocalByRef";
     break;
   case AKW_OP_GET_ELEMENT:
     name = "GetElement";

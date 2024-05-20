@@ -206,6 +206,9 @@ const char *akw_token_kind_name(AkwTokenKind kind)
   case AKW_TOKEN_KIND_RBRACE:
     name = "RBrace";
     break;
+  case AKW_TOKEN_KIND_AMP:
+    name = "Amp";
+    break;
   case AKW_TOKEN_KIND_EQ:
     name = "Eq";
     break;
@@ -241,6 +244,9 @@ const char *akw_token_kind_name(AkwTokenKind kind)
     break;
   case AKW_TOKEN_KIND_LET_KW:
     name = "Let";
+    break;
+  case AKW_TOKEN_KIND_INOUT_KW:
+    name = "Inout";
     break;
   case AKW_TOKEN_KIND_NIL_KW:
     name = "Nil";
@@ -279,6 +285,7 @@ void akw_lexer_next(AkwLexer *lex, int *rc, AkwError err)
   if (match_char(lex, ']', AKW_TOKEN_KIND_RBRACKET)) return;
   if (match_char(lex, '{', AKW_TOKEN_KIND_LBRACE)) return;
   if (match_char(lex, '}', AKW_TOKEN_KIND_RBRACE)) return;
+  if (match_char(lex, '&', AKW_TOKEN_KIND_AMP)) return;
   if (match_char(lex, '=', AKW_TOKEN_KIND_EQ)) return;
   if (match_char(lex, '+', AKW_TOKEN_KIND_PLUS)) return;
   if (match_char(lex, '-', AKW_TOKEN_KIND_MINUS)) return;
@@ -289,6 +296,7 @@ void akw_lexer_next(AkwLexer *lex, int *rc, AkwError err)
   if (match_number(lex)) return;
   if (match_string(lex, rc, err) || !akw_is_ok(*rc)) return;
   if (match_keyword(lex, "false", AKW_TOKEN_KIND_FALSE_KW)) return;
+  if (match_keyword(lex, "inout", AKW_TOKEN_KIND_INOUT_KW)) return;
   if (match_keyword(lex, "let", AKW_TOKEN_KIND_LET_KW)) return;
   if (match_keyword(lex, "nil", AKW_TOKEN_KIND_NIL_KW)) return;
   if (match_keyword(lex, "return", AKW_TOKEN_KIND_RETURN_KW)) return;
