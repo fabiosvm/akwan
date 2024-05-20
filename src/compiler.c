@@ -143,9 +143,14 @@ static inline void pop_scope(AkwCompiler *comp)
 {
   int n = comp->symbols.count;
   AkwSymbol *symbols = comp->symbols.elements;
-  int depth = comp->scopeDepth;
-  for (int i = n - 1; i > -1 && symbols[i].depth >= depth; --i)
+  int scopeDepth = comp->scopeDepth;
+  for (int i = n - 1; i > -1; --i)
+  {
+    AkwSymbol *symb = &symbols[i];
+    if (symb->depth > scopeDepth) continue;
+    if (symb->depth < scopeDepth) break;
     emit_opcode(comp, AKW_OP_POP);
+  }
   --comp->scopeDepth;
 }
 
