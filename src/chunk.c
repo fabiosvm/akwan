@@ -65,6 +65,24 @@ const char *akw_opcode_name(AkwOpcode op)
   case AKW_OP_NEG:
     name = "Neg";
     break;
+  case AKW_OP_NUMBER_ADD:
+    name = "NumberAdd";
+    break;
+  case AKW_OP_NUMBER_SUB:
+    name = "NumberSub";
+    break;
+  case AKW_OP_NUMBER_MUL:
+    name = "NumberMul";
+    break;
+  case AKW_OP_NUMBER_DIV:
+    name = "NumberDiv";
+    break;
+  case AKW_OP_NUMBER_MOD:
+    name = "NumberMod";
+    break;
+  case AKW_OP_NUMBER_NEG:
+    name = "NumberNeg";
+    break;
   case AKW_OP_RETURN:
     name = "Return";
     break;

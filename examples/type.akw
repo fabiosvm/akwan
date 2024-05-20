@@ -1,0 +1,4 @@
+
+let a: Number;
+a = 1;
+return a;

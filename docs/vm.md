@@ -24,4 +24,10 @@ Following is the instruction set:
 | `Div`        |         | Divide two values                    |
 | `Mod`        |         | Modulo of two values                 |
 | `Neg`        |         | Negate a value                       |
+| `NumberAdd`  |         | Add two numbers                      |
+| `NumberSub`  |         | Subtract two numbers                 |
+| `NumberMul`  |         | Multiply two numbers                 |
+| `NumberDiv`  |         | Divide two numbers                   |
+| `NumberMod`  |         | Modulo of two numbers                |
+| `NumberNeg`  |         | Negate a number                      |
 | `Return`     |         | Return from the function             |

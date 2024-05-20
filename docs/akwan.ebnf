@@ -1,11 +1,13 @@
 
 chunk         ::= stmt* EOF
 
-stmt          ::= "let" NAME ( "=" expr )? ";"
+stmt          ::= "let" NAME ( ":" type )? ( "=" expr )? ";"
                 | NAME "=" expr ";"
                 | "return" expr? ";"
                 | "{" stmt* "}"
                 | expr ";"
+
+type          ::= "Bool" | "Number"
 
 expr          ::= add_expr ( ".." add_expr )?
 

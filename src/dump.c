@@ -36,6 +36,12 @@ void akw_dump_chunk(const AkwChunk *chunk)
     case AKW_OP_DIV:
     case AKW_OP_MOD:
     case AKW_OP_NEG:
+    case AKW_OP_NUMBER_ADD:
+    case AKW_OP_NUMBER_SUB:
+    case AKW_OP_NUMBER_MUL:
+    case AKW_OP_NUMBER_DIV:
+    case AKW_OP_NUMBER_MOD:
+    case AKW_OP_NUMBER_NEG:
     case AKW_OP_RETURN:
       printf("%-8s\n", akw_opcode_name(op));
       ++i;

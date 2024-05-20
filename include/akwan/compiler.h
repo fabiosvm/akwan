@@ -18,11 +18,24 @@
 
 #define akw_compiler_is_ok(c) (akw_is_ok((c)->rc))
 
+typedef enum
+{
+  AKW_DATA_TYPE_ANY,
+  AKW_DATA_TYPE_NIL,
+  AKW_DATA_TYPE_BOOL,
+  AKW_DATA_TYPE_NUMBER,
+  AKW_DATA_TYPE_INT,
+  AKW_DATA_TYPE_STRING,
+  AKW_DATA_TYPE_RANGE,
+  AKW_DATA_TYPE_ARRAY
+} AkwDataType;
+
 typedef struct
 {
-  AkwToken name;
-  int      depth;
-  uint8_t  index;
+  AkwToken    name;
+  int         depth;
+  AkwDataType dataType;
+  uint8_t     index;
 } AkwSymbol;
 
 typedef struct
@@ -36,6 +49,7 @@ typedef struct
   AkwChunk             chunk;
 } AkwCompiler;
 
+const char *akw_data_type_name(AkwDataType dataType);
 void akw_compiler_init(AkwCompiler *comp, int flags, char *source);
 void akw_compiler_deinit(AkwCompiler *comp);
 void akw_compiler_compile(AkwCompiler *comp);
