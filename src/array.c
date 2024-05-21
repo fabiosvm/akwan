@@ -9,6 +9,7 @@
 //
 
 #include "akwan/array.h"
+#include <assert.h>
 #include <stdio.h>
 
 void akw_array_init(AkwArray *arr)
@@ -28,8 +29,8 @@ void akw_array_deinit(AkwArray *arr)
   int n = akw_array_count(arr);
   for (int i = 0; i < n; ++i)
   {
-    AkwValue elem = akw_array_get(arr, i);
-    akw_value_release(elem);
+    AkwValue val = akw_array_get(arr, i);
+    akw_value_release(val);
   }
   akw_vector_deinit(&arr->vec);
 }
@@ -78,8 +79,8 @@ void akw_array_print(AkwArray *arr)
   int n = akw_array_count(arr);
   for (int i = 0; i < n; ++i)
   {
-    AkwValue elem = akw_array_get(arr, i);
-    akw_value_print(elem, true);
+    AkwValue val = akw_array_get(arr, i);
+    akw_value_print(val, true);
     if (i < n - 1) printf(", ");
   }
   printf("]");
@@ -101,18 +102,137 @@ void akw_array_inplace_set(AkwArray *arr, int index, AkwValue elem)
 
 void akw_array_inplace_remove_at(AkwArray *arr, int index)
 {
-  AkwValue elem = akw_array_get(arr, index);
+  AkwValue val = akw_array_get(arr, index);
   akw_vector_remove_at(&arr->vec, index);
-  akw_value_release(elem);
+  akw_value_release(val);
 }
 
-void akw_array_inplace_clear(AkwArray *arr)
+void akw_array_inplace_concat(AkwArray *arr, AkwArray *other, int *rc)
+{
+  if (akw_array_is_empty(other)) return;
+  int n = akw_array_count(arr);
+  int m = akw_array_count(other);
+  akw_vector_ensure_capacity(&arr->vec, n + m, rc);
+  if (!akw_is_ok(*rc)) return;
+  for (int i = 0; i < m; ++i)
+  {
+    AkwValue val = akw_array_get(other, i);
+    akw_array_inplace_append(arr, val, rc);
+    if (!akw_is_ok(*rc)) return;
+  }
+}
+
+void akw_array_clear(AkwArray *arr)
 {
   int n = akw_array_count(arr);
   for (int i = 0; i < n; ++i)
   {
-    AkwValue elem = akw_array_get(arr, i);
-    akw_value_release(elem);
+    AkwValue val = akw_array_get(arr, i);
+    akw_value_release(val);
   }
   akw_vector_clear(&arr->vec);
+}
+
+AkwArray *akw_array_copy(AkwArray *arr)
+{
+  int n = akw_array_count(arr);
+  int rc = AKW_OK;
+  AkwArray *result = akw_array_new_with_capacity(n, &rc);
+  assert(akw_is_ok(rc));
+  for (int i = 0; i < n; ++i)
+  {
+    AkwValue val = akw_array_get(arr, i);
+    akw_vector_set(&result->vec, i, val);
+    akw_value_retain(val);
+  }
+  result->vec.count = n;
+  return result;
+}
+
+AkwArray *akw_array_append(AkwArray *arr, AkwValue elem, int *rc)
+{
+  int n = akw_array_count(arr);
+  AkwArray *result = akw_array_new_with_capacity(n + 1, rc);
+  if (!akw_is_ok(*rc)) return NULL;
+  for (int i = 0; i < n; ++i)
+  {
+    AkwValue val = akw_array_get(arr, i);
+    akw_vector_set(&result->vec, i, val);
+    akw_value_retain(val);
+  }
+  akw_vector_set(&result->vec, n, elem);
+  akw_value_retain(elem);
+  result->vec.count = n + 1;
+  return result;
+}
+
+AkwArray *akw_array_set(AkwArray *arr, int index, AkwValue elem)
+{
+  int n = akw_array_count(arr);
+  int rc = AKW_OK;
+  AkwArray *result = akw_array_new_with_capacity(n, &rc);
+  assert(akw_is_ok(rc));
+  for (int i = 0; i < index; ++i)
+  {
+    AkwValue val = akw_array_get(arr, i);
+    akw_vector_set(&result->vec, i, val);
+    akw_value_retain(val);
+  }
+  akw_vector_set(&result->vec, index, elem);
+  akw_value_retain(elem);
+  for (int i = index + 1; i < n; ++i)
+  {
+    AkwValue val = akw_array_get(arr, i);
+    akw_vector_set(&result->vec, i, val);
+    akw_value_retain(val);
+  }
+  result->vec.count = n;
+  return result;
+}
+
+AkwArray *akw_array_remove_at(AkwArray *arr, int index)
+{
+  int n = akw_array_count(arr);
+  int rc = AKW_OK;
+  AkwArray *result = akw_array_new_with_capacity(n - 1, &rc);
+  assert(akw_is_ok(rc));
+  for (int i = 0; i < index; ++i)
+  {
+    AkwValue val = akw_array_get(arr, i);
+    akw_vector_set(&result->vec, i, val);
+    akw_value_retain(val);
+  }
+  for (int i = index + 1; i < n; ++i)
+  {
+    AkwValue val = akw_array_get(arr, i);
+    akw_vector_set(&result->vec, i - 1, val);
+    akw_value_retain(val);
+  }
+  AkwValue val = akw_array_get(arr, index);
+  akw_value_release(val);
+  result->vec.count = n - 1;
+  return result;
+}
+
+AkwArray *akw_array_concat(AkwArray *arr, AkwArray *other, int *rc)
+{
+  int n = akw_array_count(arr);
+  int m = akw_array_count(other);
+  AkwArray *result = akw_array_new_with_capacity(n + m, rc);
+  if (!akw_is_ok(*rc)) return NULL;
+  int j = 0;
+  for (int i = 0; i < n; ++i, ++j)
+  {
+    AkwValue val = akw_array_get(arr, i);
+    akw_vector_set(&result->vec, j, val);
+    akw_value_retain(val);
+  }
+  for (int i = 0; i < m; ++i, ++j)
+  {
+    AkwValue val = akw_array_get(other, i);
+    akw_vector_set(&result->vec, j, val);
+    akw_value_retain(val);
+  }
+  result->vec.count = n + m;
+  return result;
 }

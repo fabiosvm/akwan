@@ -246,9 +246,9 @@ static void do_get_element(AkwVM *vm, AkwChunk *chunk, uint8_t *ip, AkwValue *sl
     akw_error_set(vm->err, "index out of range");
     return;
   }
-  AkwValue elem = akw_array_get(arr, index);
-  akw_stack_set(&vm->stack, 1, elem);
-  akw_value_retain(elem);
+  AkwValue val = akw_array_get(arr, index);
+  akw_stack_set(&vm->stack, 1, val);
+  akw_value_retain(val);
   akw_array_release(arr);
   akw_stack_pop(&vm->stack);
   dispatch(vm, chunk, ip, slots);

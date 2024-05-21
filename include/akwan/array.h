@@ -36,6 +36,12 @@ void akw_array_print(AkwArray *arr);
 void akw_array_inplace_append(AkwArray *arr, AkwValue elem, int *rc);
 void akw_array_inplace_set(AkwArray *arr, int index, AkwValue elem);
 void akw_array_inplace_remove_at(AkwArray *arr, int index);
-void akw_array_inplace_clear(AkwArray *arr);
+void akw_array_inplace_concat(AkwArray *arr, AkwArray *other, int *rc);
+void akw_array_clear(AkwArray *arr);
+AkwArray *akw_array_copy(AkwArray *arr);
+AkwArray *akw_array_append(AkwArray *arr, AkwValue elem, int *rc);
+AkwArray *akw_array_set(AkwArray *arr, int index, AkwValue elem);
+AkwArray *akw_array_remove_at(AkwArray *arr, int index);
+AkwArray *akw_array_concat(AkwArray *arr, AkwArray *other, int *rc);
 
 #endif // AKW_ARRAY_H
