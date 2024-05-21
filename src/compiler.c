@@ -61,13 +61,15 @@
   } while (0)
 
 static inline bool token_equal(AkwToken *token1, AkwToken *token2);
-static inline void define_symbol(AkwCompiler *comp, AkwToken *name);
-static inline uint8_t find_symbol(AkwCompiler *comp, AkwToken *name);
+static inline void define_variable(AkwCompiler *comp, AkwToken *name,
+  AkwTypeInfo typeInfo);
+static inline AkwVariable *find_variable(AkwCompiler *comp, AkwToken *name);
 static inline void pop_scope(AkwCompiler *comp);
 static inline void unexpected_token_error(AkwCompiler *comp);
 static inline void compile_chunk(AkwCompiler *comp);
 static inline void compile_stmt(AkwCompiler *comp);
 static inline void compile_let_stmt(AkwCompiler *comp);
+static inline void compile_inout_stmt(AkwCompiler *comp);
 static inline void compile_assign_stmt(AkwCompiler *comp);
 static inline void compile_return_stmt(AkwCompiler *comp);
 static inline void compile_block_stmt(AkwCompiler *comp);
@@ -80,7 +82,8 @@ static inline void compile_int(AkwCompiler *comp);
 static inline void compile_number(AkwCompiler *comp);
 static inline void compile_string(AkwCompiler *comp);
 static inline void compile_array(AkwCompiler *comp);
-static inline void compile_symbol(AkwCompiler *comp);
+static inline void compile_ref(AkwCompiler *comp);
+static inline void compile_variable(AkwCompiler *comp);
 
 static inline bool token_equal(AkwToken *token1, AkwToken *token2)
 {
@@ -88,18 +91,19 @@ static inline bool token_equal(AkwToken *token1, AkwToken *token2)
     && !memcmp(token1->chars, token2->chars, token1->length);
 }
 
-static inline void define_symbol(AkwCompiler *comp, AkwToken *name)
+static inline void define_variable(AkwCompiler *comp, AkwToken *name,
+  AkwTypeInfo typeInfo)
 {
-  int n = comp->symbols.count;
-  AkwSymbol *symbols = comp->symbols.elements;
+  int n = comp->variables.count;
+  AkwVariable *variables = comp->variables.elements;
   for (int i = n - 1; i > -1; --i)
   {
-    AkwSymbol *symb = &symbols[i];
-    if (symb->depth < comp->scopeDepth) break;
-    if (token_equal(name, &symb->name))
+    AkwVariable *var = &variables[i];
+    if (var->depth < comp->scopeDepth) break;
+    if (token_equal(name, &var->name))
     {
       comp->rc = AKW_SEMANTIC_ERROR;
-      akw_error_set(comp->err, "symbol '%.*s' already defined in %d,%d",
+      akw_error_set(comp->err, "variable '%.*s' already defined in %d,%d",
         name->length, name->chars, name->ln, name->col);
       return;
     }
@@ -107,49 +111,50 @@ static inline void define_symbol(AkwCompiler *comp, AkwToken *name)
   if (n > UINT8_MAX)
   {
     comp->rc = AKW_SEMANTIC_ERROR;
-    akw_error_set(comp->err, "too many symbols defined in %d,%d",
+    akw_error_set(comp->err, "too many variables defined in %d,%d",
       name->ln, name->col);
     return;
   }
-  AkwSymbol symb = {
+  AkwVariable var = {
     .name = *name,
     .depth = comp->scopeDepth,
+    .typeInfo = typeInfo,
     .index = (uint8_t) n
   };
   int rc = AKW_OK;
-  akw_vector_append(&comp->symbols, symb, &rc);
+  akw_vector_append(&comp->variables, var, &rc);
   assert(akw_is_ok(rc));
 }
 
-static inline uint8_t find_symbol(AkwCompiler *comp, AkwToken *name)
+static inline AkwVariable *find_variable(AkwCompiler *comp, AkwToken *name)
 {
-  int n = comp->symbols.count;
-  AkwSymbol *symbols = comp->symbols.elements;
+  int n = comp->variables.count;
+  AkwVariable *variables = comp->variables.elements;
   int scopeDepth = comp->scopeDepth;
   for (int i = n - 1; i > -1; --i)
   {
-    AkwSymbol *symb = &symbols[i];
-    if (symb->depth > scopeDepth) continue;
-    if (symb->depth < scopeDepth) break;
-    if (token_equal(name, &symb->name))
-      return symb->index;
+    AkwVariable *var = &variables[i];
+    if (var->depth > scopeDepth) continue;
+    if (var->depth < scopeDepth) break;
+    if (token_equal(name, &var->name))
+      return var;
   }
   comp->rc = AKW_SEMANTIC_ERROR;
-  akw_error_set(comp->err, "symbol '%.*s' referenced but not defined in %d,%d",
+  akw_error_set(comp->err, "variable '%.*s' used but not defined in %d,%d",
     name->length, name->chars, name->ln, name->col);
-  return 0;
+  return NULL;
 }
 
 static inline void pop_scope(AkwCompiler *comp)
 {
-  int n = comp->symbols.count;
-  AkwSymbol *symbols = comp->symbols.elements;
+  int n = comp->variables.count;
+  AkwVariable *variables = comp->variables.elements;
   int scopeDepth = comp->scopeDepth;
   for (int i = n - 1; i > -1; --i)
   {
-    AkwSymbol *symb = &symbols[i];
-    if (symb->depth > scopeDepth) continue;
-    if (symb->depth < scopeDepth) break;
+    AkwVariable *var = &variables[i];
+    if (var->depth > scopeDepth) continue;
+    if (var->depth < scopeDepth) break;
     emit_opcode(comp, AKW_OP_POP);
   }
   --comp->scopeDepth;
@@ -185,6 +190,11 @@ static inline void compile_stmt(AkwCompiler *comp)
   if (match(comp, AKW_TOKEN_KIND_LET_KW))
   {
     compile_let_stmt(comp);
+    return;
+  }
+  if (match(comp, AKW_TOKEN_KIND_INOUT_KW))
+  {
+    compile_inout_stmt(comp);
     return;
   }
   if (match(comp, AKW_TOKEN_KIND_NAME))
@@ -227,7 +237,30 @@ static inline void compile_let_stmt(AkwCompiler *comp)
   else
     emit_opcode(comp, AKW_OP_NIL);
   consume(comp, AKW_TOKEN_KIND_SEMICOLON);
-  define_symbol(comp, &token);
+  define_variable(comp, &token, akw_type_info(false));
+}
+
+static inline void compile_inout_stmt(AkwCompiler *comp)
+{
+  next(comp);
+  if (!match(comp, AKW_TOKEN_KIND_NAME))
+  {
+    unexpected_token_error(comp);
+    return;
+  }
+  AkwToken token = comp->lex.token;
+  next(comp);
+  consume(comp, AKW_TOKEN_KIND_EQ);
+  compile_expr(comp);
+  if (!akw_compiler_is_ok(comp)) return;
+  consume(comp, AKW_TOKEN_KIND_SEMICOLON);
+  AkwTypeInfo rhsInfo = comp->typeInfo;
+  define_variable(comp, &token, akw_type_info(true));
+  if (!akw_compiler_is_ok(comp)) return;
+  if (rhsInfo.isRef) return;
+  comp->rc = AKW_TYPE_ERROR;
+  akw_error_set(comp->err, "cannot pass a value to the inout variable '%.*s' in %d,%d",
+    token.length, token.chars, token.ln, token.col);
 }
 
 static inline void compile_assign_stmt(AkwCompiler *comp)
@@ -238,10 +271,11 @@ static inline void compile_assign_stmt(AkwCompiler *comp)
   compile_expr(comp);
   if (!akw_compiler_is_ok(comp)) return;
   consume(comp, AKW_TOKEN_KIND_SEMICOLON);
-  uint8_t index = find_symbol(comp, &token);
+  AkwVariable *var = find_variable(comp, &token);
   if (!akw_compiler_is_ok(comp)) return;
-  emit_opcode(comp, AKW_OP_SET_LOCAL);
-  emit_byte(comp, index);
+  AkwOpcode op = var->typeInfo.isRef ? AKW_OP_SET_LOCAL_BY_REF : AKW_OP_SET_LOCAL;
+  emit_opcode(comp, op);
+  emit_byte(comp, var->index); 
 }
 
 static inline void compile_return_stmt(AkwCompiler *comp)
@@ -281,6 +315,7 @@ static inline void compile_expr(AkwCompiler *comp)
     compile_add_expr(comp);
     if (!akw_compiler_is_ok(comp)) return;
     emit_opcode(comp, AKW_OP_RANGE);
+    comp->typeInfo = akw_type_info(false);
   }
 }
 
@@ -296,6 +331,7 @@ static inline void compile_add_expr(AkwCompiler *comp)
       compile_mul_expr(comp);
       if (!akw_compiler_is_ok(comp)) return;
       emit_opcode(comp, AKW_OP_ADD);
+      comp->typeInfo = akw_type_info(false);
       continue;
     }
     if (match(comp, AKW_TOKEN_KIND_MINUS))
@@ -304,6 +340,7 @@ static inline void compile_add_expr(AkwCompiler *comp)
       compile_mul_expr(comp);
       if (!akw_compiler_is_ok(comp)) return;
       emit_opcode(comp, AKW_OP_SUB);
+      comp->typeInfo = akw_type_info(false);
       continue;
     }
     break;
@@ -322,6 +359,7 @@ static inline void compile_mul_expr(AkwCompiler *comp)
       compile_unary_expr(comp);
       if (!akw_compiler_is_ok(comp)) return;
       emit_opcode(comp, AKW_OP_MUL);
+      comp->typeInfo = akw_type_info(false);
       continue;
     }
     if (match(comp, AKW_TOKEN_KIND_SLASH))
@@ -330,6 +368,7 @@ static inline void compile_mul_expr(AkwCompiler *comp)
       compile_unary_expr(comp);
       if (!akw_compiler_is_ok(comp)) return;
       emit_opcode(comp, AKW_OP_DIV);
+      comp->typeInfo = akw_type_info(false);
       continue;
     }
     if (match(comp, AKW_TOKEN_KIND_PERCENT))
@@ -338,6 +377,7 @@ static inline void compile_mul_expr(AkwCompiler *comp)
       compile_unary_expr(comp);
       if (!akw_compiler_is_ok(comp)) return;
       emit_opcode(comp, AKW_OP_MOD);
+      comp->typeInfo = akw_type_info(false);
       continue;
     }
     break;
@@ -352,6 +392,7 @@ static inline void compile_unary_expr(AkwCompiler *comp)
     compile_unary_expr(comp);
     if (!akw_compiler_is_ok(comp)) return;
     emit_opcode(comp, AKW_OP_NEG);
+    comp->typeInfo = akw_type_info(false);
     return;
   }
   compile_prim_expr(comp);
@@ -363,18 +404,21 @@ static inline void compile_prim_expr(AkwCompiler *comp)
   {
     next(comp);
     emit_opcode(comp, AKW_OP_NIL);
+    comp->typeInfo = akw_type_info(false);
     return;
   }
   if (match(comp, AKW_TOKEN_KIND_FALSE_KW))
   {
     next(comp);
     emit_opcode(comp, AKW_OP_FALSE);
+    comp->typeInfo = akw_type_info(false);
     return;
   }
   if (match(comp, AKW_TOKEN_KIND_TRUE_KW))
   {
     next(comp);
     emit_opcode(comp, AKW_OP_TRUE);
+    comp->typeInfo = akw_type_info(false);
     return;
   }
   if (match(comp, AKW_TOKEN_KIND_INT))
@@ -385,21 +429,30 @@ static inline void compile_prim_expr(AkwCompiler *comp)
   if (match(comp, AKW_TOKEN_KIND_NUMBER))
   {
     compile_number(comp);
+    comp->typeInfo = akw_type_info(false);
     return;
   }
   if (match(comp, AKW_TOKEN_KIND_STRING))
   {
     compile_string(comp);
+    comp->typeInfo = akw_type_info(false);
     return;
   }
   if (match(comp, AKW_TOKEN_KIND_LBRACKET))
   {
     compile_array(comp);
+    comp->typeInfo = akw_type_info(false);
+    return;
+  }
+  if (match(comp, AKW_TOKEN_KIND_AMP))
+  {
+    compile_ref(comp);
+    comp->typeInfo = akw_type_info(true);
     return;
   }
   if (match(comp, AKW_TOKEN_KIND_NAME))
   {
-    compile_symbol(comp);
+    compile_variable(comp);
     return;
   }
   if (match(comp, AKW_TOKEN_KIND_LPAREN))
@@ -484,14 +537,32 @@ static inline void compile_array(AkwCompiler *comp)
   emit_byte(comp, n);
 }
 
-static inline void compile_symbol(AkwCompiler *comp)
+static inline void compile_ref(AkwCompiler *comp)
+{
+  next(comp);
+  if (!match(comp, AKW_TOKEN_KIND_NAME))
+  {
+    unexpected_token_error(comp);
+    return;
+  }
+  AkwToken token = comp->lex.token;
+  next(comp);
+  AkwVariable *var = find_variable(comp, &token);
+  if (!akw_compiler_is_ok(comp)) return;
+  AkwOpcode op = var->typeInfo.isRef ? AKW_OP_GET_LOCAL : AKW_OP_LOCAL_REF;
+  emit_opcode(comp, op);
+  emit_byte(comp, var->index);
+}
+
+static inline void compile_variable(AkwCompiler *comp)
 {
   AkwToken token = comp->lex.token;
   next(comp);
-  uint8_t index = find_symbol(comp, &token);
+  AkwVariable *var = find_variable(comp, &token);
   if (!akw_compiler_is_ok(comp)) return;
-  emit_opcode(comp, AKW_OP_GET_LOCAL);
-  emit_byte(comp, index);
+  AkwOpcode op = var->typeInfo.isRef ? AKW_OP_GET_LOCAL_BY_REF : AKW_OP_GET_LOCAL;
+  emit_opcode(comp, op);
+  emit_byte(comp, var->index);
   while (match(comp, AKW_TOKEN_KIND_LBRACKET))
   {
     next(comp);
@@ -500,6 +571,7 @@ static inline void compile_symbol(AkwCompiler *comp)
     consume(comp, AKW_TOKEN_KIND_RBRACKET);
     emit_opcode(comp, AKW_OP_GET_ELEMENT);
   }
+  comp->typeInfo = akw_type_info(false);
 }
 
 void akw_compiler_init(AkwCompiler *comp, int flags, char *source)
@@ -509,13 +581,13 @@ void akw_compiler_init(AkwCompiler *comp, int flags, char *source)
   akw_lexer_init(&comp->lex, source, &comp->rc, comp->err);
   if (!akw_compiler_is_ok(comp)) return;
   comp->scopeDepth = 0;
-  akw_vector_init(&comp->symbols);
+  akw_vector_init(&comp->variables);
   akw_chunk_init(&comp->chunk);
 }
 
 void akw_compiler_deinit(AkwCompiler *comp)
 {
-  akw_vector_deinit(&comp->symbols);
+  akw_vector_deinit(&comp->variables);
   akw_chunk_deinit(&comp->chunk);
 }
 

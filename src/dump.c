@@ -37,17 +37,20 @@ void akw_dump_chunk(const AkwChunk *chunk)
     case AKW_OP_MOD:
     case AKW_OP_NEG:
     case AKW_OP_RETURN:
-      printf("%-8s\n", akw_opcode_name(op));
+      printf("%-15s\n", akw_opcode_name(op));
       ++i;
       break;
     case AKW_OP_INT:
     case AKW_OP_CONST:
     case AKW_OP_ARRAY:
+    case AKW_OP_LOCAL_REF:
     case AKW_OP_GET_LOCAL:
     case AKW_OP_SET_LOCAL:
+    case AKW_OP_GET_LOCAL_BY_REF:
+    case AKW_OP_SET_LOCAL_BY_REF:
       {
         uint8_t arg = code[i + 1];
-        printf("%-8s %-5d\n", akw_opcode_name(op), arg);
+        printf("%-15s %-5d\n", akw_opcode_name(op), arg);
         i += 2;
       }
       break;

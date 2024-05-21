@@ -23,15 +23,17 @@
 #define akw_string_value(s) ((AkwValue) { .type = AKW_TYPE_STRING, .flags = AKW_FLAG_OBJECT, .asPointer = (s) })
 #define akw_range_value(r)  ((AkwValue) { .type = AKW_TYPE_RANGE, .flags = AKW_FLAG_OBJECT, .asPointer = (r) })
 #define akw_array_value(a)  ((AkwValue) { .type = AKW_TYPE_ARRAY, .flags = AKW_FLAG_OBJECT, .asPointer = (a) })
+#define akw_ref_value(r)    ((AkwValue) { .type = AKW_TYPE_REF, .flags = 0, .asPointer = (r) })
 
 #define akw_type(v) ((v).type)
-
+   
 #define akw_as_bool(v)   ((v).asBool)
 #define akw_as_number(v) ((v).asNumber)
 #define akw_as_int(v)    ((int64_t) akw_as_number(v))
 #define akw_as_string(v) ((AkwString *) (v).asPointer)
 #define akw_as_range(v)  ((AkwRange *) (v).asPointer)
 #define akw_as_array(v)  ((AkwArray *) (v).asPointer)
+#define akw_as_ref(v)    ((AkwValue *) (v).asPointer)
 #define akw_as_object(v) ((AkwObject *) (v).asPointer)
 
 #define akw_is_nil(v)    (akw_type(v) == AKW_TYPE_NIL)
@@ -41,6 +43,7 @@
 #define akw_is_string(v) (akw_type(v) == AKW_TYPE_STRING)
 #define akw_is_range(v)  (akw_type(v) == AKW_TYPE_RANGE)
 #define akw_is_array(v)  (akw_type(v) == AKW_TYPE_ARRAY)
+#define akw_is_ref(v)    (akw_type(v) == AKW_TYPE_REF)
 #define akw_is_falsy(v)  ((v).flags & AKW_FALG_FALSY)
 #define akw_is_object(v) ((v).flags & AKW_FLAG_OBJECT)
 
@@ -67,7 +70,8 @@ typedef enum
   AKW_TYPE_NUMBER,
   AKW_TYPE_STRING,
   AKW_TYPE_RANGE,
-  AKW_TYPE_ARRAY
+  AKW_TYPE_ARRAY,
+  AKW_TYPE_REF
 } AkwType;
 
 typedef struct

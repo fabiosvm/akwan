@@ -18,22 +18,31 @@
 
 #define akw_compiler_is_ok(c) (akw_is_ok((c)->rc))
 
-typedef struct
-{
-  AkwToken name;
-  int      depth;
-  uint8_t  index;
-} AkwSymbol;
+#define akw_type_info(r) ((AkwTypeInfo) { .isRef = (r) })
 
 typedef struct
 {
-  int                  flags;
-  int                  rc;
-  AkwError             err;
-  AkwLexer             lex;
-  int                  scopeDepth;
-  AkwVector(AkwSymbol) symbols;
-  AkwChunk             chunk;
+  bool isRef;
+} AkwTypeInfo;
+
+typedef struct
+{
+  AkwToken    name;
+  int         depth;
+  AkwTypeInfo typeInfo;
+  uint8_t     index;
+} AkwVariable;
+
+typedef struct
+{
+  int                    flags;
+  int                    rc;
+  AkwError               err;
+  AkwLexer               lex;
+  int                    scopeDepth;
+  AkwVector(AkwVariable) variables;
+  AkwTypeInfo            typeInfo;
+  AkwChunk               chunk;
 } AkwCompiler;
 
 void akw_compiler_init(AkwCompiler *comp, int flags, char *source);
