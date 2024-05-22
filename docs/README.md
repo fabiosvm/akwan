@@ -11,13 +11,13 @@ Akwan has few basic types:
 
 - `Nil`: Represents the absence of a value. Has only one value, `nil`.
 - `Bool`: Represents a boolean value (`true` or `false`).
-- `Int`: Represents a 64-bit signed integer.
+- `Int`: Represents a signed integer.
 - `Number`: Represents a 64-bit floating-point number.
 - `Char`: Represents a single Unicode character.
 - `String`: Represents a sequence of `Char` values.
 - `Range`: Represents a range of integers.
 - `Array`: Represents a heterogeneous sequence of values.
-- `Ref`: A special type that holds a reference to a value.
+- `Ref`: A special type that holds a weak reference to a value.
 
 > **Note:** The `Int` is stored exactly as `Number` internally.
 
@@ -67,6 +67,7 @@ let x = 10;
 x = 20;
 println(x); // 20
 ```
+
 ## Arithmetic Operators
 
 Akwan has the following arithmetic operators:

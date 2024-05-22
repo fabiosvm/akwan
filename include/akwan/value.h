@@ -16,6 +16,10 @@
 #define AKW_FALG_FALSY  (1 << 0)
 #define AKW_FLAG_OBJECT (1 << 1)
 
+#define AKW_NUMBER_EPSILON (1e-6)
+#define AKW_INT_MAX        (9007199254740992LL)
+#define AKW_INT_MIN        (-9007199254740992LL)
+
 #define akw_nil_value()     ((AkwValue) { .type = AKW_TYPE_NIL, .flags = AKW_FALG_FALSY })
 #define akw_bool_value(b)   ((AkwValue) { .type = AKW_TYPE_BOOL, .flags = (b) ? 0 : AKW_FALG_FALSY, .asBool = (b) })
 #define akw_number_value(n) ((AkwValue) { .type = AKW_TYPE_NUMBER, .flags = 0, .asNumber = (n) })
@@ -95,5 +99,7 @@ const char *akw_value_type_name(AkwValue val);
 void akw_value_free(AkwValue val);
 void akw_value_release(AkwValue val);
 void akw_value_print(AkwValue val, bool quoted);
+bool akw_number_equal(double num1, double num2);
+int akw_number_compare(double num1, double num2);
 
 #endif // AKW_VALUE_H
