@@ -12,17 +12,17 @@
 #include <stdio.h>
 #include "akwan/memory.h"
 
-void akw_range_init(AkwRange *range, int64_t start, int64_t finish)
+void akw_range_init(AkwRange *range, int64_t start, int64_t end)
 {
   akw_object_init(&range->obj);
   range->start = start;
-  range->finish = finish;
+  range->end = end;
 }
 
-AkwRange *akw_range_new(int64_t start, int64_t finish)
+AkwRange *akw_range_new(int64_t start, int64_t end)
 {
   AkwRange *range = akw_memory_alloc(sizeof(*range));
-  akw_range_init(range, start, finish);
+  akw_range_init(range, start, end);
   return range;
 }
 
@@ -42,6 +42,6 @@ void akw_range_release(AkwRange *range)
 void akw_range_print(AkwRange *range)
 {
   long long start = (long long) range->start;
-  long long finish = (long long) range->finish;
-  printf("%lld..%lld", start, finish);
+  long long end = (long long) range->end;
+  printf("%lld..%lld", start, end);
 }

@@ -96,12 +96,20 @@ Ranges are created using the `..` operator:
 let r = 1..5;
 println(r); // 1..5
 println(len(r)); // 4
+```
+
+> **Note:** The range is inclusive on the start and exclusive on the end.
+
+### Indexing a range
+
+Ranges are zero-based indexed:
+
+```rs
+let r = 1..5;
 println(r[0]); // 1
 println(r[3]); // 4
 println(r[4]); // Error: index out of range
 ```
-
-> **Note:** The range is inclusive on the start and exclusive on the end.
 
 ## Arrays
 
@@ -110,6 +118,7 @@ Arrays are created using brackets `[]`:
 ```rs
 let a = [1, 2, 3];
 println(a); // [1, 2, 3]
+println(len(a)); // 3
 ```
 
 ### Indexing an array
@@ -121,6 +130,7 @@ let a = [1, 2, 3];
 println(a[0]); // 1
 println(a[1]); // 2
 println(a[2]); // 3
+println(a[3]); // Error: index out of range
 ```
 
 ### Slicing an array

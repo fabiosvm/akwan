@@ -1,2 +1,3 @@
 
-return 1..10;
+let r = 1..5;
+return r[0];

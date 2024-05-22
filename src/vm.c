@@ -24,6 +24,8 @@
 typedef void (*AkwInstructionHandleFn)(AkwVM *, AkwChunk *, uint8_t *, AkwValue *);
 
 static inline void push(AkwVM *vm, AkwValue val);
+static inline void range_get_element(AkwVM *vm, AkwValue val1, AkwValue val2);
+static inline void array_get_element(AkwVM *vm, AkwValue val1, AkwValue val2);
 static void do_nil(AkwVM *vm, AkwChunk *chunk, uint8_t *ip, AkwValue *slots);
 static void do_false(AkwVM *vm, AkwChunk *chunk, uint8_t *ip, AkwValue *slots);
 static void do_true(AkwVM *vm, AkwChunk *chunk, uint8_t *ip, AkwValue *slots);
@@ -69,6 +71,51 @@ static inline void push(AkwVM *vm, AkwValue val)
     return;
   }
   akw_stack_push(&vm->stack, val);
+}
+
+static inline void range_get_element(AkwVM *vm, AkwValue val1, AkwValue val2)
+{
+  if (!akw_is_int(val2))
+  {
+    vm->rc = AKW_TYPE_ERROR;
+    akw_error_set(vm->err, "cannot index Range with %s", akw_value_type_name(val2));
+    return;
+  }
+  AkwRange *range = akw_as_range(val1);
+  int64_t index = akw_as_int(val2);
+  if (index < 0 || index >= akw_range_count(range))
+  {
+    vm->rc = AKW_RANGE_ERROR;
+    akw_error_set(vm->err, "index out of range");
+    return;
+  }
+  int64_t num = akw_range_get(range, index);
+  akw_stack_set(&vm->stack, 1, akw_int_value(num));
+  akw_range_release(range);
+  akw_stack_pop(&vm->stack);
+}
+
+static inline void array_get_element(AkwVM *vm, AkwValue val1, AkwValue val2)
+{
+  if (!akw_is_int(val2))
+  {
+    vm->rc = AKW_TYPE_ERROR;
+    akw_error_set(vm->err, "cannot index Array with %s", akw_value_type_name(val2));
+    return;
+  }
+  AkwArray *arr = akw_as_array(val1);
+  int64_t index = akw_as_int(val2);
+  if (index < 0 || index >= akw_array_count(arr))
+  {
+    vm->rc = AKW_RANGE_ERROR;
+    akw_error_set(vm->err, "index out of range");
+    return;
+  }
+  AkwValue val = akw_array_get(arr, index);
+  akw_stack_set(&vm->stack, 1, val);
+  akw_value_retain(val);
+  akw_array_release(arr);
+  akw_stack_pop(&vm->stack);
 }
 
 static void do_nil(AkwVM *vm, AkwChunk *chunk, uint8_t *ip, AkwValue *slots)
@@ -129,8 +176,8 @@ static void do_range(AkwVM *vm, AkwChunk *chunk, uint8_t *ip, AkwValue *slots)
     return;
   }
   int64_t start = akw_as_int(val1);
-  int64_t finish = akw_as_int(val2);
-  AkwRange *range = akw_range_new(start, finish);
+  int64_t end = akw_as_int(val2);
+  AkwRange *range = akw_range_new(start, end);
   akw_stack_set(&vm->stack, 1, akw_range_value(range));
   akw_object_retain(&range->obj);
   akw_stack_pop(&vm->stack);
@@ -231,26 +278,21 @@ static void do_get_element(AkwVM *vm, AkwChunk *chunk, uint8_t *ip, AkwValue *sl
   ++ip;
   AkwValue val1 = akw_stack_get(&vm->stack, 1);
   AkwValue val2 = akw_stack_get(&vm->stack, 0);
-  if (!akw_is_array(val1) || !akw_is_int(val2))
+  switch (akw_type(val1))
   {
+  case AKW_TYPE_RANGE:
+    range_get_element(vm, val1, val2);
+    if (!akw_vm_is_ok(vm)) return;
+    break;
+  case AKW_TYPE_ARRAY:
+    array_get_element(vm, val1, val2);
+    if (!akw_vm_is_ok(vm)) return;
+    break;
+  default:
     vm->rc = AKW_TYPE_ERROR;
-    akw_error_set(vm->err, "cannot index %s with %s", akw_value_type_name(val1),
-      akw_value_type_name(val2));
+    akw_error_set(vm->err, "cannot index %s", akw_value_type_name(val1));
     return;
   }
-  AkwArray *arr = akw_as_array(val1);
-  int64_t index = akw_as_int(val2);
-  if (index < 0 || index >= akw_array_count(arr))
-  {
-    vm->rc = AKW_RANGE_ERROR;
-    akw_error_set(vm->err, "index out of range");
-    return;
-  }
-  AkwValue val = akw_array_get(arr, index);
-  akw_stack_set(&vm->stack, 1, val);
-  akw_value_retain(val);
-  akw_array_release(arr);
-  akw_stack_pop(&vm->stack);
   dispatch(vm, chunk, ip, slots);
 }
 
